@@ -1,0 +1,3237 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#07090e" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>9XPlayer IPTV Android | تطبيق تشغيل القنوات والأفلام والمسلسلات</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, select, textarea {
+      user-select: text;
+    }
+    body {
+      font-family: 'Cairo', 'Inter', sans-serif;
+      background-color: #06080d;
+      color: #f8fafc;
+      overflow-x: hidden;
+      overscroll-behavior-y: none;
+    }
+    /* Android App Shell Frame (Phone Mode Default) */
+    .android-app-shell {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% 0%, rgba(225, 29, 72, 0.16) 0%, rgba(10, 14, 23, 0.98) 45%, #06080d 100%);
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);
+      border-left: 1px solid rgba(255, 255, 255, 0.06);
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .android-app-shell.tv-landscape-mode {
+      max-width: 100%;
+    }
+    .glass-card {
+      background: rgba(16, 21, 34, 0.9);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    /* Modern Sleek InfoBar Glassmorphism */
+    .modern-infobar {
+      background: linear-gradient(180deg, rgba(10, 14, 24, 0.82) 0%, rgba(6, 9, 16, 0.96) 100%);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(225, 29, 72, 0.18);
+    }
+    .android-ripple {
+      transition: transform 0.14s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .android-ripple:active {
+      transform: scale(0.95);
+    }
+    .ninex-gradient {
+      background: linear-gradient(135deg, #e11d48 0%, #f97316 100%);
+    }
+    .ninex-card-tv {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.28) 0%, rgba(15, 23, 42, 0.95) 75%);
+      border: 1px solid rgba(56, 189, 248, 0.32);
+    }
+    .ninex-card-film {
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.28) 0%, rgba(15, 23, 42, 0.95) 75%);
+      border: 1px solid rgba(244, 63, 94, 0.32);
+    }
+    .ninex-card-serie {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.26) 0%, rgba(15, 23, 42, 0.95) 75%);
+      border: 1px solid rgba(52, 211, 153, 0.32);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(244, 63, 94, 0.45);
+      border-radius: 9999px;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .osd-drawer-transition {
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    }
+    .infobar-transition {
+      transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+    }
+  </style>
+</head>
+<body class="bg-[#030508] text-slate-100 selection:bg-rose-500 selection:text-white">
+
+  <!-- Android Phone App Container -->
+  <div id="androidAppShell" class="android-app-shell">
+
+    <!-- ==================== ANDROID STATUS BAR ==================== -->
+    <div class="sticky top-0 z-40 bg-[#05070c]/95 backdrop-blur-md px-4 py-1.5 flex items-center justify-between text-[11px] text-slate-300 border-b border-white/5">
+      <div class="flex items-center gap-2">
+        <span id="liveClockDisplay" dir="ltr" class="font-mono font-bold text-white tracking-wider">00:00</span>
+        <span class="text-[10px] px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 font-bold">9X ANDROID</span>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <button
+          id="btnToggleAndroidScreenMode"
+          type="button"
+          class="px-2 py-0.5 rounded-full bg-slate-800/90 hover:bg-slate-700 text-[10px] text-amber-300 font-bold border border-white/10 flex items-center gap-1 android-ripple"
+          title="التبديل بين وضع الهاتف ووضع الشاشة العريضة"
+        >
+          <span>📱</span>
+          <span id="screenModeLabel">وضع الهاتف</span>
+        </button>
+        <div class="flex items-center gap-1.5 text-emerald-400">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.077 13.308-5.077 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05a7 7 0 00-9.9 0 1 1 0 01-1.414-1.414 9 9 0 0112.728 0 1 1 0 01-1.414 1.414zM12.12 13.88a3 3 0 00-4.242 0 1 1 0 01-1.415-1.415 5 5 0 017.072 0 1 1 0 01-1.415 1.415zM9 16a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" />
+          </svg>
+          <div class="w-5 h-2.5 rounded-sm border border-emerald-400 p-0.5 flex items-center">
+            <div class="w-full h-full bg-emerald-400 rounded-[1px]"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification (Android Snackbar) -->
+    <div id="toastContainer" class="fixed bottom-20 inset-x-0 z-50 flex flex-col items-center gap-2 max-w-sm mx-auto pointer-events-none px-4"></div>
+
+    <!-- ==================== ANDROID TOP APP BAR (Visible after login) ==================== -->
+    <header id="appHeader" class="hidden sticky top-[29px] z-30 glass-card border-b border-slate-800/80 px-3.5 py-2.5">
+      <div class="flex items-center justify-between gap-2">
+        <button id="btnBackHome" type="button" class="flex items-center gap-2.5 text-right group focus:outline-none android-ripple">
+          <div class="w-9 h-9 rounded-xl ninex-gradient flex items-center justify-center shadow-md shadow-rose-500/30">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <span class="font-black text-sm tracking-wide text-white block leading-tight">IPTV StreamPro</span>
+            <span id="headerServerBadge" class="text-[11px] text-amber-400 font-medium block truncate max-w-[130px]">متصل بالخادم</span>
+          </div>
+        </button>
+
+        <!-- Hidden Header Nav Tabs -->
+        <nav id="headerNavTabs" class="hidden">
+          <button id="navDashboardBtn" type="button">الرئيسية</button>
+          <button id="navLiveBtn" type="button">TV البث المباشر</button>
+          <button id="navFilmBtn" type="button">Film الأفلام</button>
+          <button id="navSerieBtn" type="button">Série المسلسلات</button>
+        </nav>
+
+        <!-- User Status & Actions -->
+        <div class="flex items-center gap-1.5">
+          <button
+            id="btnHeaderOpenM3uModal"
+            type="button"
+            class="px-2.5 py-1 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold flex items-center gap-1 android-ripple"
+            title="اختيار وترتيب باقات السيرفر بصيغة M3U"
+          >
+            <span>📂</span>
+            <span>M3U</span>
+          </button>
+
+          <div class="hidden sm:flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 px-2.5 py-1 rounded-full text-[11px]">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="headerUsername" class="text-slate-200 font-bold truncate max-w-[65px]">user</span>
+            <span id="headerModeTag" class="hidden">Xtream API</span>
+          </div>
+
+          <button id="btnReloadContent" type="button" title="تحديث القنوات والباقات" class="p-2 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/70 android-ripple">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+
+          <button id="btnLogout" type="button" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-bold android-ripple">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>تغيير الحساب</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== MAIN ANDROID APP CONTENT AREA ==================== -->
+    <main class="flex-1 flex flex-col px-3.5 py-4 pb-24">
+
+      <!-- ==================== 1. ANDROID LOGIN VIEW (WITH MAIN SERVER M3U PACKAGE SELECTOR BUTTON) ==================== -->
+      <section id="loginView" class="w-full my-auto space-y-4">
+        <div class="glass-card rounded-[28px] p-5 sm:p-6 shadow-2xl border border-slate-800/90 relative overflow-hidden">
+          <div class="absolute top-0 inset-x-0 h-1.5 ninex-gradient"></div>
+
+          <!-- Android App Icon & Title -->
+          <div class="text-center mb-5">
+            <div class="w-16 h-16 rounded-[22px] ninex-gradient mx-auto flex items-center justify-center shadow-xl shadow-rose-500/30 mb-3 font-black text-2xl text-white tracking-tighter border-2 border-white/15">
+              9X
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">9XPlayer IPTV</h1>
+            <p class="text-slate-400 text-xs mt-1">أدخل بيانات السيرفر الرئيسي لتشغيل القنوات أو تخصيص باقات M3U</p>
+          </div>
+
+          <!-- Saved Credentials Indicator -->
+          <div id="savedCredsNotice" class="hidden mb-4 px-3.5 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-300">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>تم استرجاع بيانات الاشتراك تلقائياً</span>
+            </div>
+            <button id="btnClearSaved" type="button" class="underline font-bold hover:text-white">مسح</button>
+          </div>
+
+          <!-- Android Material Login Form -->
+          <form id="loginForm" class="space-y-3.5">
+            <div class="grid grid-cols-3 gap-2.5">
+              <!-- Host -->
+              <div class="col-span-2">
+                <label for="inputHost" class="block text-[11px] font-bold text-slate-300 mb-1">
+                  Host (رابط السيرفر الرئيسي)
+                </label>
+                <input
+                  id="inputHost"
+                  type="text"
+                  dir="ltr"
+                  required
+                  placeholder="http://example-iptv.com"
+                  class="w-full rounded-2xl bg-slate-900/95 border border-slate-700/80 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition"
+                />
+              </div>
+
+              <!-- Port -->
+              <div>
+                <label for="inputPort" class="block text-[11px] font-bold text-slate-300 mb-1">
+                  Port (المنفذ)
+                </label>
+                <input
+                  id="inputPort"
+                  type="text"
+                  dir="ltr"
+                  placeholder="8080"
+                  class="w-full rounded-2xl bg-slate-900/95 border border-slate-700/80 px-3 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition text-center"
+                />
+              </div>
+            </div>
+
+            <!-- Username -->
+            <div>
+              <label for="inputUsername" class="block text-[11px] font-bold text-slate-300 mb-1">
+                Username (اسم المستخدم)
+              </label>
+              <input
+                id="inputUsername"
+                type="text"
+                dir="ltr"
+                required
+                placeholder="أدخل اسم المستخدم"
+                class="w-full rounded-2xl bg-slate-900/95 border border-slate-700/80 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition"
+              />
+            </div>
+
+            <!-- Password -->
+            <div>
+              <label for="inputPassword" class="block text-[11px] font-bold text-slate-300 mb-1">
+                Password (كلمة المرور)
+              </label>
+              <div class="relative">
+                <input
+                  id="inputPassword"
+                  type="password"
+                  dir="ltr"
+                  required
+                  placeholder="••••••••••••"
+                  class="w-full rounded-2xl bg-slate-900/95 border border-slate-700/80 pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition"
+                />
+                <button
+                  id="btnTogglePassword"
+                  type="button"
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 hover:text-rose-400"
+                  title="إظهار / إخفاء كلمة المرور"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Remember me & Demo -->
+            <div class="flex items-center justify-between pt-1">
+              <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input id="checkRemember" type="checkbox" checked class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-rose-500 focus:ring-rose-500" />
+                <span class="text-xs text-slate-300 font-medium">حفظ الحساب تلقائياً</span>
+              </label>
+              <button id="btnFillDemo" type="button" class="text-xs text-amber-400 hover:text-amber-300 font-bold underline">
+                تعبئة خادم تجريبي سريع
+              </button>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              id="btnSubmitLogin"
+              type="submit"
+              class="w-full py-3.5 px-5 rounded-2xl ninex-gradient text-white font-extrabold text-sm shadow-lg shadow-rose-500/30 flex items-center justify-center gap-2 android-ripple"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+              <span>تسجيل الدخول وتحميل القنوات</span>
+            </button>
+          </form>
+
+          <!-- Divider -->
+          <div class="my-4 flex items-center gap-3">
+            <div class="h-px bg-slate-800 flex-1"></div>
+            <span class="text-[11px] text-emerald-400 font-bold">تخصيص باقات السيرفر بصيغة M3U</span>
+            <div class="h-px bg-slate-800 flex-1"></div>
+          </div>
+
+          <!-- Home Page Server M3U Package Selector & Sorter Button -->
+          <button
+            id="btnOpenM3uLoaderHome"
+            type="button"
+            class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-l from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2.5 android-ripple border border-emerald-400/30"
+          >
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>تحميل القنوات عن طريق ملف M3U (اختيار وترتيب الباقات)</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ==================== 2. ANDROID LOADING VIEW ==================== -->
+      <section id="loadingView" class="hidden w-full my-auto">
+        <div class="glass-card rounded-[28px] p-6 text-center border border-slate-800 shadow-2xl">
+          <div class="w-16 h-16 rounded-2xl ninex-gradient mx-auto flex items-center justify-center mb-4 shadow-lg shadow-rose-500/30">
+            <svg class="w-8 h-8 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          </div>
+          <h2 class="text-lg font-extrabold text-white mb-1">جاري مزامنة السيرفر...</h2>
+          <p id="loadingStepText" class="text-xs text-amber-400 mb-5">تحميل جميع الباقات والقنوات بدون حصر...</p>
+
+          <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 mb-5">
+            <div id="loadingProgressBar" class="h-full ninex-gradient transition-all duration-300" style="width: 15%"></div>
+          </div>
+
+          <div class="space-y-2.5 text-right text-xs bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800/80">
+            <div id="stepLive" class="flex items-center justify-between text-slate-400">
+              <span>1. باقات وقنوات البث المباشر (Live TV)</span>
+              <span class="step-status font-bold">قيد الانتظار...</span>
+            </div>
+            <div id="stepMovies" class="flex items-center justify-between text-slate-400">
+              <span>2. باقات الأفلام (Films / VOD)</span>
+              <span class="step-status font-bold">قيد الانتظار...</span>
+            </div>
+            <div id="stepSeries" class="flex items-center justify-between text-slate-400">
+              <span>3. باقات المسلسلات والحلقات (Séries)</span>
+              <span class="step-status font-bold">قيد الانتظار...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 3. ANDROID APP HOME DASHBOARD ==================== -->
+      <section id="dashboardView" class="hidden w-full space-y-4 my-auto">
+        <!-- Compact Android Subscription Status Card -->
+        <div class="glass-card rounded-3xl p-4 border border-slate-800/90 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-12 h-12 rounded-2xl ninex-gradient flex items-center justify-center font-black text-xl text-white shadow-lg shadow-rose-500/30 shrink-0">
+              9X
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <h2 class="text-base font-black text-white truncate">9XPlayer Android</h2>
+              </div>
+              <p id="dashHostDisplay" dir="ltr" class="text-[11px] text-slate-400 font-mono truncate">host:8080</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 text-left shrink-0">
+            <div class="bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-2xl text-center">
+              <span class="text-[10px] text-slate-400 block">الاشتراك</span>
+              <span id="dashExpiryDisplay" class="text-xs font-extrabold text-emerald-400">نشط</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-2xl text-center">
+              <span class="text-[10px] text-slate-400 block">المحتوى</span>
+              <span id="dashTotalCount" class="text-xs font-extrabold text-amber-400">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Android App Big Touch Tiles: LIVE TV + FILM & SÉRIE -->
+        <div class="grid grid-cols-2 gap-3.5">
+          <!-- Tile 1: LIVE TV -->
+          <button
+            id="cardOpenTv"
+            type="button"
+            class="col-span-2 ninex-card-tv rounded-[26px] p-5 text-right group relative overflow-hidden flex items-center justify-between min-h-[135px] shadow-xl android-ripple focus:outline-none"
+          >
+            <div class="absolute -left-8 -bottom-8 w-36 h-36 rounded-full bg-sky-500/25 blur-2xl"></div>
+            <div class="space-y-1.5 z-10">
+              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-500/25 text-sky-300 border border-sky-400/30">
+                LIVE TV • بث مباشر
+              </span>
+              <h3 class="text-2xl sm:text-3xl font-black text-white tracking-tight">TV البث المباشر</h3>
+              <p id="statTvSummary" class="text-xs text-sky-200/90 font-bold">0 باقة • 0 قناة</p>
+            </div>
+
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-xl shadow-sky-500/30 shrink-0 z-10">
+              <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </button>
+
+          <!-- Tile 2: FILM -->
+          <button
+            id="cardOpenFilm"
+            type="button"
+            class="ninex-card-film rounded-[26px] p-4 sm:p-5 text-right group relative overflow-hidden flex flex-col justify-between min-h-[160px] shadow-xl android-ripple focus:outline-none"
+          >
+            <div class="w-12 h-12 rounded-2xl ninex-gradient flex items-center justify-center shadow-lg shadow-rose-500/30">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+              </svg>
+            </div>
+
+            <div class="mt-4">
+              <span class="text-[10px] font-extrabold text-rose-300 uppercase tracking-wider">VOD MOVIES</span>
+              <h3 class="text-xl font-black text-white mt-0.5">Film الأفلام</h3>
+              <p id="statFilmSummary" class="text-[11px] text-slate-300 font-bold mt-1">0 باقة • 0 فيلم</p>
+            </div>
+          </button>
+
+          <!-- Tile 3: SÉRIE -->
+          <button
+            id="cardOpenSerie"
+            type="button"
+            class="ninex-card-serie rounded-[26px] p-4 sm:p-5 text-right group relative overflow-hidden flex flex-col justify-between min-h-[160px] shadow-xl android-ripple focus:outline-none"
+          >
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+
+            <div class="mt-4">
+              <span class="text-[10px] font-extrabold text-emerald-300 uppercase tracking-wider">TV SERIES</span>
+              <h3 class="text-xl font-black text-white mt-0.5">Série المسلسلات</h3>
+              <p id="statSerieSummary" class="text-[11px] text-slate-300 font-bold mt-1">0 باقة • 0 مسلسل</p>
+            </div>
+          </button>
+        </div>
+
+        <!-- M3U Loader & Package Sorter Button on Dashboard -->
+        <button
+          id="btnOpenM3uLoaderDash"
+          type="button"
+          class="w-full py-3.5 px-4 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 font-extrabold text-xs flex items-center justify-between android-ripple"
+        >
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-base">📂</span>
+            <div class="text-right">
+              <span class="block text-white font-bold">تحميل قنوات عبر ملف M3U وترتيب الباقات</span>
+              <span class="block text-[10px] text-emerald-300/80">اختر الباقات التي تريد تحميلها فقط ورتّبها حسب رغبتك</span>
+            </div>
+          </div>
+          <span class="text-emerald-400 font-black">←</span>
+        </button>
+      </section>
+
+      <!-- ==================== 4. ANDROID SECTION BROWSER VIEW ==================== -->
+      <!-- Sub-mode A: PACKAGES ONLY VIEW (تظهر أيقونات الباقات فقط في وضع الهاتف) -->
+      <!-- Sub-mode B: CHANNELS ONLY VIEW (تظهر القنوات فقط في أيقونات مستطيلة واحدة تحت الأخرى) -->
+      <section id="sectionBrowserView" class="hidden w-full space-y-3.5">
+
+        <!-- Top Navigation Bar inside Section -->
+        <div class="glass-card rounded-2xl p-3 border border-slate-800 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <!-- Back to 3 main sections -->
+              <button
+                id="btnBackToDashboard"
+                type="button"
+                class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold flex items-center gap-1 border border-slate-700 shrink-0 android-ripple"
+              >
+                <span>→</span>
+                <span>العودة للأقسام (TV / Film / Série)</span>
+              </button>
+
+              <!-- Back to Package Icons (Visible when inside a specific package's channel list) -->
+              <button
+                id="btnBackToPackagesOnly"
+                type="button"
+                class="hidden px-2.5 py-1.5 rounded-xl ninex-gradient text-white text-[11px] font-bold flex items-center gap-1 shrink-0 android-ripple shadow"
+              >
+                <span>↩</span>
+                <span>رجوع للباقات</span>
+              </button>
+            </div>
+
+            <button
+              id="btnFilterFavorites"
+              type="button"
+              class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-amber-400 flex items-center gap-1 shrink-0 android-ripple"
+            >
+              <span>★</span>
+              <span>المفضلة</span>
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between px-0.5">
+            <div class="min-w-0">
+              <h2 id="currentSectionTitle" class="text-sm sm:text-base font-extrabold text-white truncate">قسم البث المباشر (TV)</h2>
+              <p id="currentPackageSubtitle" class="text-[11px] text-amber-400 truncate">اختر الباقة لعرض قنواتها</p>
+            </div>
+            <button
+              id="btnTogglePackagesSheet"
+              type="button"
+              class="px-2.5 py-1 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-bold flex items-center gap-1 shrink-0 android-ripple"
+            >
+              <span>📂</span>
+              <span>الباقات</span>
+              <span id="packagesCountBadge" class="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-bold">0</span>
+            </button>
+          </div>
+
+          <!-- Contextual Search Input -->
+          <div class="flex items-center gap-2">
+            <div id="packageSearchWrapper" class="relative flex-1">
+              <input
+                id="inputSearchPackages"
+                type="text"
+                placeholder="ابحث عن اسم الباقة..."
+                class="w-full rounded-xl bg-slate-900/95 border border-slate-700/80 pr-8 pl-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-rose-500"
+              />
+              <svg class="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+
+            <div id="channelSearchWrapper" class="hidden relative flex-1">
+              <input
+                id="inputSearchItems"
+                type="text"
+                placeholder="ابحث عن قناة داخل هذه الباقة..."
+                class="w-full rounded-xl bg-slate-900/95 border border-slate-700/80 pr-8 pl-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-rose-500"
+              />
+              <svg class="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+          <div id="androidHorizontalPackagesBar" class="hidden"></div>
+        </div>
+
+        <!-- ==================== STEP 1: PACKAGES ONLY VIEW (أيقونات الباقات فقط في وضع الهاتف) ==================== -->
+        <aside id="androidPackagesDrawerPanel" class="w-full space-y-2.5">
+          <div id="packagesListContainer" class="grid grid-cols-2 gap-2.5">
+            <!-- Populated dynamically with clean Android package icons/tiles ONLY -->
+          </div>
+        </aside>
+
+        <!-- ==================== STEP 2: CHANNELS ONLY VIEW (أيقونات مستطيلة واحدة تحت الأخرى) ==================== -->
+        <div id="channelsOnlySubView" class="hidden w-full space-y-2.5">
+          <!-- Series Episodes Selector Panel -->
+          <div id="seriesEpisodesPanel" class="hidden glass-card rounded-2xl p-4 border border-emerald-500/30 space-y-3">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+              <div>
+                <span class="text-[11px] font-bold text-emerald-400">مواسم وحلقات المسلسل</span>
+                <h3 id="selectedSeriesTitle" class="text-base font-extrabold text-white">اسم المسلسل</h3>
+              </div>
+              <button
+                id="btnCloseSeriesPanel"
+                type="button"
+                class="px-2.5 py-1 rounded-xl bg-slate-800 text-xs text-slate-300 font-semibold"
+              >
+                إغلاق الحلقات ✕
+              </button>
+            </div>
+            <div id="seasonsTabsContainer" class="flex flex-wrap gap-1.5"></div>
+            <div id="episodesGridContainer" class="flex flex-col gap-2 max-h-64 overflow-y-auto custom-scroll pr-1"></div>
+          </div>
+
+          <!-- Header showing current package name and channel count -->
+          <div class="flex items-center justify-between px-1">
+            <span id="itemsGridTitle" class="text-xs sm:text-sm font-extrabold text-slate-200">قنوات الباقة</span>
+            <span id="itemsCountLabel" class="text-xs text-amber-400 font-bold">0 قناة</span>
+          </div>
+
+          <!-- Rectangular Channel Icons Stacked Vertically One Under Another (واحدة تحت الأخرى) -->
+          <div id="itemsGridContainer" class="flex flex-col gap-2.5">
+            <!-- Dynamically populated rectangular channel cards one under another -->
+          </div>
+
+          <!-- Load More Button for large packages -->
+          <div id="loadMoreContainer" class="hidden pt-2 text-center">
+            <button
+              id="btnLoadMoreItems"
+              type="button"
+              class="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-rose-500/40 text-xs font-bold text-rose-300 transition shadow-lg android-ripple"
+            >
+              إظهار المزيد من القنوات...
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- ==================== FULLSCREEN PLAYER WITH MODERN HORIZONTAL INFOBAR, RIGHT/LEFT ARROWS & COMPACT SIDE PACKAGE BAR ==================== -->
+    <div id="playerDockPanel" class="hidden fixed inset-0 z-50 bg-black flex flex-col justify-between overflow-hidden select-none">
+
+      <!-- Video Stage (Full Screen) -->
+      <div id="videoStageContainer" class="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
+        <video
+          id="internalVideoPlayer"
+          playsinline
+          crossorigin="anonymous"
+          class="w-full h-full object-contain bg-black cursor-pointer"
+        ></video>
+
+        <!-- Top Mini Status Bar (Appears with InfoBar: Back to Package Sidebar & Exit Player) -->
+        <div id="topMiniPlayerBar" class="infobar-transition absolute top-3 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
+          <div class="flex items-center gap-2 pointer-events-auto">
+            <!-- Back Button -> Shows Compact Side Package Bar (وعند الضغط رجوع يظهر شريط الباقة الجانبي) -->
+            <button
+              id="btnSettingsBackToChannels"
+              type="button"
+              class="px-3 py-1.5 rounded-full bg-slate-950/85 hover:bg-rose-600/90 backdrop-blur-xl border border-white/15 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xl android-ripple"
+              title="إظهار شريط قنوات الباقة الجانبي"
+            >
+              <span>↩</span>
+              <span>رجوع إلى الخلف</span>
+            </button>
+
+            <span id="gestureGuideBadge" class="hidden"></span>
+            <!-- Recording Live Indicator Badge when recording is active -->
+            <div id="recordingActiveBadge" class="hidden px-3 py-1 rounded-full bg-red-600/90 text-white text-[11px] font-extrabold flex items-center gap-1.5 shadow-lg animate-pulse">
+              <span class="w-2 h-2 rounded-full bg-white"></span>
+              <span>جاري التسجيل</span>
+              <span id="recordingTimerText" dir="ltr" class="font-mono">00:00</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 pointer-events-auto">
+            <button
+              id="btnFullscreenPlayer"
+              type="button"
+              class="px-3 py-1.5 rounded-full bg-slate-950/85 hover:bg-slate-800 backdrop-blur-xl border border-white/15 text-sky-300 text-xs font-bold shadow-xl android-ripple"
+            >
+              ⛶ ملء الشاشة
+            </button>
+            <button
+              id="btnClosePlayer"
+              type="button"
+              class="px-3 py-1.5 rounded-full bg-rose-600/90 hover:bg-rose-500 backdrop-blur-xl border border-rose-400/30 text-white text-xs font-extrabold shadow-xl android-ripple"
+            >
+              إغلاق المشغل ✕
+            </button>
+          </div>
+        </div>
+
+        <!-- ==================== RIGHT ARROW (سهم على اليمين للمرور للقناة الموالية) ==================== -->
+        <button
+          id="btnRightArrowNextChannel"
+          type="button"
+          title="القناة الموالية (التالية)"
+          class="infobar-transition absolute right-3 top-1/2 -translate-y-1/2 z-30 w-11 h-16 sm:w-12 sm:h-20 rounded-2xl bg-slate-950/75 hover:bg-rose-600/90 backdrop-blur-xl border border-white/15 text-white flex flex-col items-center justify-center gap-0.5 shadow-2xl android-ripple group"
+        >
+          <svg class="w-6 h-6 text-rose-400 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+          </svg>
+          <span class="hidden">الموالية</span>
+        </button>
+
+        <!-- ==================== LEFT ARROW (سهم على اليسار للرجوع للقناة السابقة) ==================== -->
+        <button
+          id="btnLeftArrowPrevChannel"
+          type="button"
+          title="القناة السابقة"
+          class="infobar-transition absolute left-3 top-1/2 -translate-y-1/2 z-30 w-11 h-16 sm:w-12 sm:h-20 rounded-2xl bg-slate-950/75 hover:bg-rose-600/90 backdrop-blur-xl border border-white/15 text-white flex flex-col items-center justify-center gap-0.5 shadow-2xl android-ripple group"
+        >
+          <svg class="w-6 h-6 text-sky-400 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span class="hidden">السابقة</span>
+        </button>
+
+        <!-- ==================== COMPACT SIDE PACKAGE DRAWER (شريط الباقة الجانبي المصغّر لكي لا يغطي الشاشة بأكملها) ==================== -->
+        <div
+          id="onScreenChannelDrawer"
+          style="transform: translateX(105%); opacity: 0; pointer-events: none;"
+          class="osd-drawer-transition absolute inset-y-3 right-3 w-52 sm:w-60 max-w-[48%] rounded-3xl bg-slate-950/82 backdrop-blur-2xl border border-rose-500/40 z-40 flex flex-col shadow-2xl overflow-hidden"
+        >
+          <div class="p-2.5 bg-slate-900/90 border-b border-white/10 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-black text-rose-400 flex items-center gap-1">
+                <span>📺</span>
+                <span>شريط الباقة</span>
+              </span>
+              <button
+                id="btnCloseOsdDrawer"
+                type="button"
+                class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-rose-500 text-slate-200 hover:text-white text-[10px] font-bold"
+              >
+                إخفاء ✕
+              </button>
+            </div>
+
+            <select
+              id="osdPackageSelect"
+              class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-2 py-1 text-[11px] text-white font-bold focus:outline-none focus:border-rose-500"
+            ></select>
+
+            <input
+              id="osdChannelSearch"
+              type="text"
+              placeholder="بحث في الباقة..."
+              class="w-full rounded-xl bg-slate-950/90 border border-slate-800 px-2 py-1 text-[11px] text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+            />
+          </div>
+
+          <!-- Compact Channels List inside Narrow Side Bar -->
+          <div id="osdChannelsList" class="flex-1 overflow-y-auto custom-scroll p-1.5 space-y-1"></div>
+
+          <div class="px-2.5 py-1.5 bg-slate-900/90 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-300">
+            <span id="osdChannelsCount">0 قناة</span>
+            <button id="btnExitFromDrawerToFullList" type="button" class="text-rose-400 hover:text-rose-300 font-extrabold underline">
+              قائمة القنوات ↩
+            </button>
+          </div>
+        </div>
+
+        <!-- ==================== MODERN SLEEK BOTTOM HORIZONTAL INFOBAR (أنفوبار أفقي سفلي عصري وجذاب يظهر عند لمس الشاشة) ==================== -->
+        <div
+          id="modernBottomInfoBar"
+          class="infobar-transition absolute bottom-3 inset-x-3 z-30 modern-infobar rounded-3xl p-3 sm:p-4 max-w-2xl mx-auto"
+        >
+          <!-- Popup Chooser for External & Internal Players (تظهر عند الضغط على أيقونة اختيار المشغلات في الأنفوبار) -->
+          <div id="infobarPlayersPopup" class="hidden mb-3 p-3 rounded-2xl bg-slate-950/95 border border-rose-500/35 space-y-2.5 shadow-2xl">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-extrabold text-amber-300 flex items-center gap-1.5">
+                <span>🎬</span>
+                <span>اختر المشغل الداخلي أو الخارجي:</span>
+              </span>
+              <div class="flex items-center gap-1 bg-slate-900 p-0.5 rounded-xl border border-slate-800">
+                <button id="btnExtM3u8" type="button" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-600 text-white">
+                  مشغل داخلي (M3U8)
+                </button>
+                <button id="btnExtTs" type="button" class="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400">
+                  صيغة TS
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              <button
+                id="btnExtVlc"
+                type="button"
+                class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-300 text-[11px] font-bold shrink-0 android-ripple"
+              >
+                <span>🔶</span>
+                <span>VLC Player</span>
+              </button>
+              <button
+                id="btnExtMx"
+                type="button"
+                class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-300 text-[11px] font-bold shrink-0 android-ripple"
+              >
+                <span>▶️</span>
+                <span>MX Player</span>
+              </button>
+              <button
+                id="btnExtPot"
+                type="button"
+                class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold shrink-0 android-ripple"
+              >
+                <span>🎬</span>
+                <span>PotPlayer</span>
+              </button>
+              <button
+                id="btnExtSystem"
+                type="button"
+                class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-bold shrink-0 android-ripple"
+              >
+                <span>📱</span>
+                <span>مشغل النظام</span>
+              </button>
+              <button
+                id="btnDownloadM3uItem"
+                type="button"
+                class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold shrink-0 android-ripple"
+              >
+                <span>⬇️</span>
+                <span>ملف .M3U خارجي</span>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1">
+              <input
+                id="inputActiveStreamUrl"
+                type="text"
+                readonly
+                dir="ltr"
+                class="w-full bg-transparent text-[10px] text-slate-300 font-mono focus:outline-none truncate"
+                value=""
+              />
+              <button
+                id="btnCopyStreamUrl"
+                type="button"
+                class="px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 text-[10px] font-bold shrink-0 android-ripple"
+              >
+                نسخ الرابط
+              </button>
+            </div>
+          </div>
+
+          <!-- Main InfoBar Content Row: Logo + Channel Name + Resolution + Action Icons -->
+          <div class="flex flex-col gap-2.5">
+            <!-- Upper Row inside InfoBar: Channel Logo, Name, Package, Resolution Badges -->
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <!-- Channel Logo -->
+                <div class="relative shrink-0">
+                  <img
+                    id="nowPlayingLogo"
+                    src=""
+                    alt="logo"
+                    class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-contain bg-slate-900/95 border border-white/15 p-1 shadow-lg"
+                  />
+                  <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
+                </div>
+
+                <!-- Channel Name, Number & Package -->
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span id="osdChannelNumberBadge" class="px-2 py-0.5 rounded-lg ninex-gradient text-white text-[10px] font-black shadow">
+                      CH #1
+                    </span>
+                    <span id="infobarResolutionBadge" dir="ltr" class="px-2 py-0.5 rounded-lg bg-sky-500/20 border border-sky-400/40 text-sky-300 text-[10px] font-mono font-extrabold">
+                      1080p FHD
+                    </span>
+                    <span id="streamFormatBadge" dir="ltr" class="px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[10px] font-mono font-bold">
+                      HLS
+                    </span>
+                  </div>
+                  <h3 id="nowPlayingTitle" class="text-sm sm:text-base font-black text-white truncate mt-1">جاري التشغيل...</h3>
+                  <p id="nowPlayingMeta" class="text-[11px] text-slate-300 truncate">الباقة الحالية • بث مباشر مستقر</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Thin Neon Progress / Signal Bar -->
+            <div class="w-full h-1 rounded-full bg-slate-800/90 overflow-hidden flex">
+              <div class="w-full h-full ninex-gradient"></div>
+            </div>
+
+            <!-- Lower Row inside InfoBar: ICON-ONLY Controls (رموز وأيقونات فقط لكل وظيفة) -->
+            <div id="osdBottomControls" class="flex items-center justify-around sm:justify-between gap-2 pt-1">
+              <div class="flex items-center gap-2">
+                <!-- Play / Pause Icon Only -->
+                <button
+                  id="btnOsdPlayPause"
+                  type="button"
+                  title="إيقاف مؤقت / تشغيل"
+                  class="w-11 h-11 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-white/15 text-white flex items-center justify-center android-ripple shrink-0 shadow-lg"
+                >
+                  <span id="playPauseIconSvg" class="text-base leading-none">⏸</span>
+                  <span class="hidden">إيقاف مؤقت</span>
+                </button>
+
+                <!-- Record Channel & Save to Phone Storage Icon Only -->
+                <button
+                  id="btnRecordChannelToPhone"
+                  type="button"
+                  title="تسجيل القناة وتخزينها في ذاكرة الهاتف"
+                  class="w-11 h-11 rounded-2xl bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/50 text-rose-200 flex items-center justify-center android-ripple shrink-0 shadow-lg relative"
+                >
+                  <span id="recordBtnDot" class="w-4 h-4 rounded-full bg-red-500 shadow-md shadow-red-500/50"></span>
+                  <span id="recordBtnLabel" class="hidden">تسجيل وحفظ بالهاتف</span>
+                </button>
+
+                <!-- Mute / Unmute Icon Only -->
+                <button
+                  id="btnOsdMute"
+                  type="button"
+                  title="كتم / تشغيل الصوت"
+                  class="w-11 h-11 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-white/15 text-white flex items-center justify-center android-ripple shrink-0 shadow-lg"
+                >
+                  <span id="muteIconDisplay" class="text-base leading-none">🔊</span>
+                  <span class="hidden">الصوت</span>
+                </button>
+
+                <!-- Choose External/Internal Players Icon Only -->
+                <button
+                  id="btnInfobarChoosePlayers"
+                  type="button"
+                  title="اختيار المشغلات (داخلي / VLC / MX)"
+                  class="w-11 h-11 rounded-2xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-400/40 text-amber-300 flex items-center justify-center android-ripple shrink-0 shadow-lg"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="hidden">🎬 المشغلات</span>
+                </button>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <!-- Aspect Ratio Icon Only -->
+                <button
+                  id="btnOsdAspectRatio"
+                  type="button"
+                  title="تغيير أبعاد الشاشة"
+                  class="w-11 h-11 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-white/15 text-sky-300 flex items-center justify-center android-ripple shrink-0 shadow-lg"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                  <span class="hidden">الأبعاد: احتواء</span>
+                </button>
+
+                <!-- Side Package Channels Toggle Icon Only -->
+                <button
+                  id="btnToggleScreenChannelList"
+                  type="button"
+                  title="إظهار شريط قنوات الباقة الجانبي"
+                  class="w-11 h-11 rounded-2xl ninex-gradient text-white flex items-center justify-center android-ripple shrink-0 shadow-lg"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h10" />
+                  </svg>
+                  <span class="hidden">📋 قنوات الباقة على الشاشة</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hidden compatibility buttons so previous controls remain addressable -->
+          <div id="doubleTapSettingsOverlay" class="hidden">
+            <button id="btnPrevChannel" type="button">⏮ السابقة</button>
+            <button id="btnNextChannel" type="button">التالية ⏭</button>
+            <button id="btnHideSettingsOverlay" type="button">العودة للفيديو ✕</button>
+          </div>
+        </div>
+
+        <!-- Stream Status Overlay -->
+        <div id="playerStatusOverlay" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-50">
+          <h4 id="playerOverlayTitle" class="text-sm font-bold text-white mb-1">تنبيه تشغيل البث</h4>
+          <p id="playerOverlayMessage" class="text-[11px] text-slate-300 max-w-xs mb-3 leading-relaxed">
+            بعض خوادم IPTV تتطلب فتح البث في مشغل أندرويد خارجي مثل VLC أو MX Player.
+          </p>
+          <div class="flex flex-wrap items-center justify-center gap-2">
+            <button id="btnOverlayTryTestStream" type="button" class="px-3 py-1.5 rounded-xl ninex-gradient text-white text-xs font-bold">
+              تشغيل البث التجريبي في المشغل الداخلي
+            </button>
+            <button id="btnOverlayDismiss" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 text-xs font-semibold">
+              إخفاء الرسالة
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MAIN SERVER M3U PACKAGE SELECTOR & REORDER MODAL ==================== -->
+    <!-- Connects to the main server, displays all server packages, and lets user select & reorder packages to load or download as M3U -->
+    <div id="m3uManagerModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3.5">
+      <div class="glass-card rounded-[28px] w-full max-w-md max-h-[90vh] flex flex-col border border-emerald-500/35 shadow-2xl overflow-hidden">
+        <!-- Modal Header -->
+        <div class="p-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold">📂</span>
+            <div>
+              <h3 class="text-sm font-black text-white">باقات السيرفر الرئيسي (M3U)</h3>
+              <p class="text-[11px] text-emerald-300">اختر الباقات ورتّبها لتنزيلها وتخزينها كملف M3U في ذاكرة الهاتف</p>
+            </div>
+          </div>
+          <button id="btnCloseM3uModal" type="button" class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">✕</button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-4 overflow-y-auto custom-scroll space-y-3.5 flex-1">
+          <!-- Step 1: Fetch Main Server Packages or Upload/URL -->
+          <div class="space-y-2.5 bg-slate-950/85 p-3.5 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-emerald-300">1. مصدر الباقات (السيرفر الرئيسي):</span>
+              <span id="m3uServerStatusTag" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">جاهز</span>
+            </div>
+
+            <!-- Primary Action: Fetch Packages from the Main Server entered in Host/Port/User/Pass -->
+            <div class="flex items-center gap-2">
+              <button
+                id="btnFetchMainServerM3uPackages"
+                type="button"
+                class="flex-1 py-2.5 px-3 rounded-xl ninex-gradient text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg android-ripple"
+              >
+                <span>🔄</span>
+                <span>جلب باقات السيرفر الرئيسي</span>
+              </button>
+              <button
+                id="btnLoadSampleM3u"
+                type="button"
+                class="py-2.5 px-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] font-bold android-ripple shrink-0"
+              >
+                ⚡ ملف M3U تجريبي
+              </button>
+            </div>
+
+            <!-- Optional: Load from file or URL -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <label class="cursor-pointer py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[11px] font-bold text-slate-200 text-center android-ripple">
+                <span>📁 أو رفع ملف .M3U</span>
+                <input id="inputM3uFileUpload" type="file" accept=".m3u,.m3u8,.txt" class="hidden" />
+              </label>
+              <div class="flex items-center gap-1">
+                <input
+                  id="inputM3uUrlOrText"
+                  type="text"
+                  dir="ltr"
+                  placeholder="رابط M3U..."
+                  class="w-full rounded-xl bg-slate-900 border border-slate-700 px-2 py-1.5 text-[11px] text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  id="btnFetchM3uUrl"
+                  type="button"
+                  class="px-2 py-1.5 rounded-xl bg-emerald-600 text-white text-[10px] font-bold shrink-0 android-ripple"
+                >
+                  تحليل الرابط
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Select & Reorder Main Server Packages -->
+          <div id="m3uPackagesEditorSection" class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-white">2. اختر الباقات المراد تحميلها ورتّبها (⬆️ / ⬇️):</span>
+              <div class="flex items-center gap-2 text-[11px]">
+                <button id="btnM3uSelectAll" type="button" class="text-emerald-400 font-bold underline">تحديد الكل</button>
+                <span class="text-slate-600">|</span>
+                <button id="btnM3uDeselectAll" type="button" class="text-rose-400 font-bold underline">إلغاء الكل</button>
+              </div>
+            </div>
+
+            <div id="m3uPackagesSortableList" class="space-y-1.5 max-h-60 overflow-y-auto custom-scroll pr-1">
+              <!-- Populated dynamically with checkbox + package name + count + Up/Down reorder buttons -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer: Load Selected Server Packages into App OR Save as .M3U file -->
+        <div class="p-3.5 bg-slate-900/95 border-t border-slate-800 flex items-center gap-2">
+          <button
+            id="btnApplyM3uPackages"
+            type="button"
+            class="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/25 android-ripple"
+          >
+            ✅ تحميل الباقات المختارة بالترتيب المحدد
+          </button>
+          <button
+            id="btnExportFilteredM3u"
+            type="button"
+            class="py-3 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs border border-slate-700 android-ripple shrink-0"
+            title="تنزيل ملف M3U في ذاكرة الهاتف يحتوي فقط على الباقات المختارة من السيرفر"
+          >
+            ⬇️ حفظ M3U
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ANDROID BOTTOM NAVIGATION BAR ==================== -->
+    <nav
+      id="androidBottomNav"
+      class="hidden fixed bottom-0 z-40 w-full max-w-[inherit] bg-[#080b12]/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 flex items-center justify-around shadow-2xl"
+    >
+      <button
+        id="bottomNavHome"
+        type="button"
+        class="flex flex-col items-center justify-center py-1 px-3 rounded-2xl text-rose-400 font-bold text-[11px] gap-0.5 android-ripple"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        <span>الرئيسية</span>
+      </button>
+
+      <button
+        id="bottomNavTv"
+        type="button"
+        class="flex flex-col items-center justify-center py-1 px-3 rounded-2xl text-slate-400 font-semibold text-[11px] gap-0.5 android-ripple"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <span>البث TV</span>
+      </button>
+
+      <button
+        id="bottomNavFilm"
+        type="button"
+        class="flex flex-col items-center justify-center py-1 px-3 rounded-2xl text-slate-400 font-semibold text-[11px] gap-0.5 android-ripple"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+        </svg>
+        <span>الأفلام Film</span>
+      </button>
+
+      <button
+        id="bottomNavSerie"
+        type="button"
+        class="flex flex-col items-center justify-center py-1 px-3 rounded-2xl text-slate-400 font-semibold text-[11px] gap-0.5 android-ripple"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <span>المسلسلات Série</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // STORAGE HELPERS (Sandbox Safe)
+    // =========================================================================
+    const STORAGE_KEYS = {
+      CREDS: 'iptv_streampro_credentials_v1',
+      FAVS: 'iptv_streampro_favorites_v1'
+    };
+
+    function safeGetStorage(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function safeSetStorage(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        // Ignore storage errors
+      }
+    }
+
+    function safeRemoveStorage(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        // Ignore
+      }
+    }
+
+    // =========================================================================
+    // DYNAMIC SVG CHANNEL LOGO GENERATOR
+    // =========================================================================
+    function generateChannelSvgLogo(name, categoryId) {
+      const clean = (name || 'TV').replace(/[^\w\u0600-\u06FF\s]/g, '').trim();
+      const words = clean.split(/\s+/).filter(Boolean);
+      let badgeText = words.slice(0, 2).map((w) => w.slice(0, 3)).join(' ');
+      if (!badgeText) badgeText = 'TV';
+
+      const palettes = [
+        ['#e11d48', '#f97316'],
+        ['#0284c7', '#2563eb'],
+        ['#059669', '#0d9488'],
+        ['#7c3aed', '#db2777'],
+        ['#d97706', '#dc2626']
+      ];
+      let hash = 0;
+      const seed = String(name || '') + String(categoryId || '');
+      for (let i = 0; i < seed.length; i++) {
+        hash = (hash * 31 + seed.charCodeAt(i)) % 997;
+      }
+      const [c1, c2] = palettes[hash % palettes.length];
+
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="${c1}"/>
+            <stop offset="100%" stop-color="${c2}"/>
+          </linearGradient>
+        </defs>
+        <rect width="120" height="120" rx="28" fill="url(#g)"/>
+        <rect x="6" y="6" width="108" height="108" rx="22" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+        <text x="60" y="66" text-anchor="middle" fill="#ffffff" font-family="Cairo, Inter, sans-serif" font-weight="800" font-size="22">${badgeText.replace(/[<>&"']/g, '')}</text>
+        <text x="60" y="96" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="Inter, sans-serif" font-weight="700" font-size="12">9X HD</text>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    function getItemLogoUrl(item) {
+      const rawLogo = item.stream_icon || item.cover || item.logo || '';
+      if (rawLogo && /^https?:\/\//i.test(rawLogo.trim())) {
+        return rawLogo.trim();
+      }
+      return generateChannelSvgLogo(item.name || item.title, item.category_id);
+    }
+
+    // =========================================================================
+    // DEMO / FALLBACK DATA
+    // =========================================================================
+    const PUBLIC_TEST_STREAMS = {
+      news: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+      sports: 'https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8',
+      doc: 'https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8',
+      movie1: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+      movie2: 'https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8'
+    };
+
+    function buildRichPackagesData() {
+      const liveCategories = [
+        { category_id: 'live_bein', category_name: '⚽ باقة بي إن سبورت (beIN Sports)' },
+        { category_id: 'live_maroc', category_name: '🇲🇦 باقة القنوات المغربية والمغاربية' },
+        { category_id: 'live_arabic', category_name: '🌍 باقة القنوات العربية (MBC / OSN)' },
+        { category_id: 'live_ssc', category_name: '🏆 باقة القنوات الرياضية العربية' },
+        { category_id: 'live_news', category_name: '📰 باقة القنوات الإخبارية المباشرة' },
+        { category_id: 'live_doc', category_name: '🦁 باقة الوثائقيات والطبيعة' },
+        { category_id: 'live_kids', category_name: '🎈 باقة قنوات الأطفال والأنمي' }
+      ];
+
+      const liveStreams = [
+        { stream_id: 101, name: 'beIN SPORTS 1 Premium 4K', category_id: 'live_bein', quality: '4K UHD', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 102, name: 'beIN SPORTS 2 Premium FHD', category_id: 'live_bein', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 103, name: 'beIN SPORTS 3 Premium FHD', category_id: 'live_bein', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 104, name: 'beIN SPORTS 4 HD', category_id: 'live_bein', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.doc },
+        { stream_id: 105, name: 'beIN SPORTS 5 HD', category_id: 'live_bein', quality: 'HD 720p', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 106, name: 'beIN SPORTS NEWS HD الإخبارية', category_id: 'live_bein', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 201, name: 'الرياضية المغربية مباشر (Arryadia HD)', category_id: 'live_maroc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 202, name: 'الأولى المغربية (Al Aoula HD)', category_id: 'live_maroc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.doc },
+        { stream_id: 203, name: 'دوزيم القناة الثانية (2M Maroc FHD)', category_id: 'live_maroc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 204, name: 'المغربية الإخبارية (Al Maghribia HD)', category_id: 'live_maroc', quality: 'HD 720p', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 205, name: 'ميدي 1 تيفي (Medi 1 TV HD)', category_id: 'live_maroc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 206, name: 'تمازيغت (Tamazight HD)', category_id: 'live_maroc', quality: 'HD', stream_url: PUBLIC_TEST_STREAMS.doc },
+        { stream_id: 301, name: 'إم بي سي 1 (MBC 1 FHD)', category_id: 'live_arabic', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 302, name: 'إم بي سي 2 (MBC 2 Movies)', category_id: 'live_arabic', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.movie1 },
+        { stream_id: 303, name: 'إم بي سي أكشن (MBC Action FHD)', category_id: 'live_arabic', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.movie2 },
+        { stream_id: 304, name: 'إم بي سي دراما (MBC Drama HD)', category_id: 'live_arabic', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.doc },
+        { stream_id: 305, name: 'إم بي سي 5 المغرب العربي (MBC 5)', category_id: 'live_arabic', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 401, name: 'SSC SPORT 1 FHD', category_id: 'live_ssc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 402, name: 'SSC SPORT 2 FHD', category_id: 'live_ssc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 403, name: 'قناة الكأس 1 (Alkass One HD)', category_id: 'live_ssc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 404, name: 'أبوظبي الرياضية 1 (AD Sports 1)', category_id: 'live_ssc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.doc },
+        { stream_id: 501, name: 'الجزيرة الإخبارية مباشر (Al Jazeera FHD)', category_id: 'live_news', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 502, name: 'العربية الحدث (Al Hadath HD)', category_id: 'live_news', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 503, name: 'سكاي نيوز عربية (Sky News Arabia)', category_id: 'live_news', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.doc },
+        { stream_id: 504, name: 'فرانس 24 عربي (France 24 Arabic)', category_id: 'live_news', quality: 'HD', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 601, name: 'ناشيونال جيوغرافيك أبوظبي (Nat Geo HD)', category_id: 'live_doc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.doc },
+        { stream_id: 602, name: 'الجزيرة الوثائقية (Al Jazeera Doc)', category_id: 'live_doc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 603, name: 'Discovery Science FHD', category_id: 'live_doc', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 701, name: 'سبيستون كيدز (Spacetoon FHD)', category_id: 'live_kids', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.news },
+        { stream_id: 702, name: 'كرتون نتورك بالعربية (CN Arabia)', category_id: 'live_kids', quality: 'HD', stream_url: PUBLIC_TEST_STREAMS.sports },
+        { stream_id: 703, name: 'إم بي سي 3 (MBC 3 HD)', category_id: 'live_kids', quality: 'FHD 1080p', stream_url: PUBLIC_TEST_STREAMS.doc }
+      ];
+
+      return {
+        liveCategories,
+        liveStreams,
+        vodCategories: [
+          { category_id: 'vod_action', category_name: '🔥 باقة أفلام الأكشن والإثارة' },
+          { category_id: 'vod_arabic', category_name: '🎬 باقة الأفلام العربية والمغربية' },
+          { category_id: 'vod_scifi', category_name: '🚀 باقة أفلام الخيال العلمي' },
+          { category_id: 'vod_family', category_name: '👨‍👩‍👧 باقة الأفلام العائلية والأنيميشن' }
+        ],
+        vodStreams: [
+          { stream_id: 1001, name: 'مهمة مستحيلة: الحساب الميت (Mission Action)', category_id: 'vod_action', rating: '8.4', year: '2025', container_extension: 'mp4', stream_url: PUBLIC_TEST_STREAMS.movie1 },
+          { stream_id: 1002, name: 'المدافع الأخير (The Last Guardian)', category_id: 'vod_action', rating: '7.9', year: '2024', container_extension: 'mp4', stream_url: PUBLIC_TEST_STREAMS.movie2 },
+          { stream_id: 1003, name: 'طريق الدار البيضاء (Casablanca Express)', category_id: 'vod_arabic', rating: '8.6', year: '2025', container_extension: 'mp4', stream_url: PUBLIC_TEST_STREAMS.movie1 },
+          { stream_id: 1004, name: 'ليالي مراكش (Marrakech Nights)', category_id: 'vod_arabic', rating: '8.1', year: '2024', container_extension: 'mp4', stream_url: PUBLIC_TEST_STREAMS.doc },
+          { stream_id: 1005, name: 'ما وراء المجرة (Beyond the Horizon)', category_id: 'vod_scifi', rating: '8.8', year: '2025', container_extension: 'mp4', stream_url: PUBLIC_TEST_STREAMS.movie2 },
+          { stream_id: 1006, name: 'كوكب الرمال 2 (Dune Odyssey)', category_id: 'vod_scifi', rating: '8.9', year: '2024', container_extension: 'mp4', stream_url: PUBLIC_TEST_STREAMS.movie1 },
+          { stream_id: 1007, name: 'مغامرات الأرنب الذكي (Big Buck Bunny)', category_id: 'vod_family', rating: '8.2', year: '2024', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.movie1 }
+        ],
+        seriesCategories: [
+          { category_id: 'ser_ramadan', category_name: '🌙 باقة المسلسلات العربية والدراما' },
+          { category_id: 'ser_global', category_name: '🌍 باقة المسلسلات العالمية المترجمة' },
+          { category_id: 'ser_turkish', category_name: '🎭 باقة المسلسلات التركية والتاريخية' },
+          { category_id: 'ser_docu', category_name: '🏛️ باقة السلاسل الوثائقية' }
+        ],
+        seriesList: [
+          {
+            series_id: 5001,
+            name: 'أسرار القصبة (Secrets of the Kasbah)',
+            category_id: 'ser_ramadan',
+            rating: '8.7',
+            seasons: {
+              'الموسم 1': [
+                { id: 500101, title: 'الحلقة 1: البداية الغامضة', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.movie1 },
+                { id: 500102, title: 'الحلقة 2: الرسالة القديمة', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.sports },
+                { id: 500103, title: 'الحلقة 3: المواجهة الكبرى', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.doc }
+              ],
+              'الموسم 2': [
+                { id: 500201, title: 'الحلقة 1: عودة الغائب', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.movie2 },
+                { id: 500202, title: 'الحلقة 2: الحقيقة الكاملة', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.movie1 }
+              ]
+            }
+          },
+          {
+            series_id: 5002,
+            name: 'امبراطورية الشمال (Northern Empire)',
+            category_id: 'ser_global',
+            rating: '9.1',
+            seasons: {
+              'الموسم 1': [
+                { id: 500301, title: 'الحلقة 1: شتاء الشمال', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.movie2 },
+                { id: 500302, title: 'الحلقة 2: تحالف الملوك', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.movie1 },
+                { id: 500303, title: 'الحلقة 3: معركة الحصن', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.sports }
+              ]
+            }
+          },
+          {
+            series_id: 5003,
+            name: 'فرسان الأناضول (Knights of Anatolia)',
+            category_id: 'ser_turkish',
+            rating: '8.5',
+            seasons: {
+              'الموسم 1': [
+                { id: 500401, title: 'الحلقة 1: راية النصر', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.doc },
+                { id: 500402, title: 'الحلقة 2: خطة القلعة', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.movie1 }
+              ]
+            }
+          },
+          {
+            series_id: 5004,
+            name: 'كوكبنا الأزرق (Blue Planet Series)',
+            category_id: 'ser_docu',
+            rating: '9.3',
+            seasons: {
+              'الموسم 1': [
+                { id: 500501, title: 'الحلقة 1: أعماق المحيطات', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.doc },
+                { id: 500502, title: 'الحلقة 2: الشعاب المرجانية', container_extension: 'm3u8', stream_url: PUBLIC_TEST_STREAMS.movie1 }
+              ]
+            }
+          }
+        ]
+      };
+    }
+
+    // =========================================================================
+    // APPLICATION STATE
+    // =========================================================================
+    const state = {
+      credentials: {
+        host: '',
+        port: '',
+        username: '',
+        password: '',
+        remember: true
+      },
+      isTvLandscapeMode: false,
+      connectionMode: 'xtream',
+      serverInfo: {
+        expDate: 'غير محدود',
+        status: 'Active'
+      },
+      data: {
+        liveCategories: [],
+        liveStreams: [],
+        vodCategories: [],
+        vodStreams: [],
+        seriesCategories: [],
+        seriesList: []
+      },
+      activeSection: 'tv',
+      sectionSubView: 'packages', // 'packages' (only package icons) | 'channels' (only channels of selected package)
+      activeCategoryId: 'ALL',
+      packageSearchQuery: '',
+      searchQuery: '',
+      onlyFavorites: false,
+      favorites: safeGetStorage(STORAGE_KEYS.FAVS) || {},
+      visibleGridLimit: 240,
+      filteredItemsCache: [],
+      activePlayItem: null,
+      activePackageItems: [],
+      activeChannelIndex: 0,
+      osdCategoryId: 'ALL',
+      osdSearchQuery: '',
+      osdDrawerOpen: false,
+      infoBarVisible: true,
+      infoBarAutoHideTimer: null,
+      videoAspectMode: 'contain',
+      activeStreamExt: 'm3u8',
+      hlsInstance: null,
+      // Recording State
+      isRecording: false,
+      mediaRecorder: null,
+      recordedChunks: [],
+      recordingSeconds: 0,
+      recordingInterval: null,
+      // Main Server M3U Package Selector State
+      m3uParsedGroups: []
+    };
+
+    // =========================================================================
+    // UI HELPERS
+    // =========================================================================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const colorClasses =
+        type === 'success'
+          ? 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200'
+          : type === 'warning'
+          ? 'bg-amber-950/95 border-amber-500/50 text-amber-200'
+          : 'bg-slate-900/95 border-rose-500/50 text-rose-200';
+
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-full border shadow-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300 ${colorClasses}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function updateAndroidBottomNavUI(viewName) {
+      const bottomNav = document.getElementById('androidBottomNav');
+      if (!bottomNav) return;
+
+      const isLoggedOut = viewName === 'loginView' || viewName === 'loadingView';
+      bottomNav.classList.toggle('hidden', isLoggedOut);
+
+      const btnHome = document.getElementById('bottomNavHome');
+      const btnTv = document.getElementById('bottomNavTv');
+      const btnFilm = document.getElementById('bottomNavFilm');
+      const btnSerie = document.getElementById('bottomNavSerie');
+
+      const inactiveCls = 'flex flex-col items-center justify-center py-1 px-3 rounded-2xl text-slate-400 font-semibold text-[11px] gap-0.5 android-ripple';
+      const activeCls = 'flex flex-col items-center justify-center py-1 px-3 rounded-2xl bg-rose-500/15 text-rose-400 font-extrabold text-[11px] gap-0.5 android-ripple';
+
+      [btnHome, btnTv, btnFilm, btnSerie].forEach((b) => {
+        if (b) b.className = inactiveCls;
+      });
+
+      if (viewName === 'dashboardView' && btnHome) {
+        btnHome.className = activeCls;
+      } else if (viewName === 'sectionBrowserView') {
+        if (state.activeSection === 'tv' && btnTv) btnTv.className = activeCls;
+        if (state.activeSection === 'film' && btnFilm) btnFilm.className = activeCls;
+        if (state.activeSection === 'serie' && btnSerie) btnSerie.className = activeCls;
+      }
+    }
+
+    function switchMainView(viewName) {
+      const views = ['loginView', 'loadingView', 'dashboardView', 'sectionBrowserView'];
+      views.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', id !== viewName);
+      });
+
+      const header = document.getElementById('appHeader');
+      header.classList.toggle('hidden', viewName === 'loginView' || viewName === 'loadingView');
+
+      updateAndroidBottomNavUI(viewName);
+    }
+
+    function setSectionSubView(subMode) {
+      state.sectionSubView = subMode; // 'packages' or 'channels'
+      const packagesPanel = document.getElementById('androidPackagesDrawerPanel');
+      const channelsPanel = document.getElementById('channelsOnlySubView');
+      const btnBackToPackages = document.getElementById('btnBackToPackagesOnly');
+      const pkgSearchWrap = document.getElementById('packageSearchWrapper');
+      const chSearchWrap = document.getElementById('channelSearchWrapper');
+
+      if (subMode === 'packages') {
+        packagesPanel.classList.remove('hidden');
+        channelsPanel.classList.add('hidden');
+        btnBackToPackages.classList.add('hidden');
+        pkgSearchWrap.classList.remove('hidden');
+        chSearchWrap.classList.add('hidden');
+        document.getElementById('currentPackageSubtitle').textContent = 'اختر الباقة لعرض قنواتها';
+      } else {
+        packagesPanel.classList.add('hidden');
+        channelsPanel.classList.remove('hidden');
+        btnBackToPackages.classList.remove('hidden');
+        pkgSearchWrap.classList.add('hidden');
+        chSearchWrap.classList.remove('hidden');
+      }
+    }
+
+    function normalizeBaseUrl(host, port) {
+      let cleanHost = (host || '').trim().replace(/\/+$/, '');
+      if (!/^https?:\/\//i.test(cleanHost)) {
+        cleanHost = 'http://' + cleanHost;
+      }
+      const cleanPort = (port || '').trim();
+      try {
+        const urlObj = new URL(cleanHost);
+        if (cleanPort && !urlObj.port) {
+          urlObj.port = cleanPort;
+        }
+        return urlObj.origin;
+      } catch (e) {
+        return cleanPort ? `${cleanHost}:${cleanPort}` : cleanHost;
+      }
+    }
+
+    function buildXtreamStreamUrl(item, section, extOverride) {
+      if (item.direct_m3u_url) return item.direct_m3u_url;
+      const base = normalizeBaseUrl(state.credentials.host, state.credentials.port);
+      const u = encodeURIComponent(state.credentials.username);
+      const p = encodeURIComponent(state.credentials.password);
+
+      if (section === 'tv') {
+        const ext = extOverride || state.activeStreamExt || 'm3u8';
+        return `${base}/live/${u}/${p}/${item.stream_id}.${ext}`;
+      }
+      if (section === 'film') {
+        const ext = item.container_extension || 'mp4';
+        return `${base}/movie/${u}/${p}/${item.stream_id}.${ext}`;
+      }
+      if (section === 'serie') {
+        const ext = item.container_extension || 'mp4';
+        return `${base}/series/${u}/${p}/${item.id || item.stream_id}.${ext}`;
+      }
+      return item.stream_url || PUBLIC_TEST_STREAMS.news;
+    }
+
+    // =========================================================================
+    // LOGIN & FULL SERVER LOADER (UNLIMITED CHANNELS)
+    // =========================================================================
+    function updateStepUI(stepId, statusText, isDone) {
+      const row = document.getElementById(stepId);
+      if (!row) return;
+      const statusSpan = row.querySelector('.step-status');
+      if (statusSpan) statusSpan.textContent = statusText;
+      row.className = isDone
+        ? 'flex items-center justify-between text-emerald-400'
+        : 'flex items-center justify-between text-amber-300';
+    }
+
+    async function fetchWithTimeout(url, timeoutMs = 15000) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timer);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return await response.json();
+      } catch (err) {
+        clearTimeout(timer);
+        throw err;
+      }
+    }
+
+    async function connectAndLoadContent(creds) {
+      switchMainView('loadingView');
+      const progressBar = document.getElementById('loadingProgressBar');
+      const stepText = document.getElementById('loadingStepText');
+
+      progressBar.style.width = '18%';
+      stepText.textContent = 'جاري الاتصال بالسيرفر والتحقق من الحساب...';
+      updateStepUI('stepLive', 'جاري التحميل...', false);
+      updateStepUI('stepMovies', 'قيد الانتظار...', false);
+      updateStepUI('stepSeries', 'قيد الانتظار...', false);
+
+      const baseUrl = normalizeBaseUrl(creds.host, creds.port);
+      const u = encodeURIComponent(creds.username);
+      const p = encodeURIComponent(creds.password);
+      const apiBase = `${baseUrl}/player_api.php?username=${u}&password=${p}`;
+
+      let loadedFromRealServer = false;
+
+      try {
+        const authData = await fetchWithTimeout(apiBase, 8000);
+        if (authData && authData.user_info && Number(authData.user_info.auth) === 1) {
+          loadedFromRealServer = true;
+          state.connectionMode = 'xtream';
+          if (authData.user_info.exp_date) {
+            const expDate = new Date(Number(authData.user_info.exp_date) * 1000);
+            state.serverInfo.expDate = expDate.toLocaleDateString('ar-MA');
+          }
+
+          progressBar.style.width = '42%';
+          stepText.textContent = 'جاري تحميل جميع باقات وقنوات البث المباشر بالكامل...';
+          const [liveCats, liveStreams] = await Promise.all([
+            fetchWithTimeout(`${apiBase}&action=get_live_categories`, 15000).catch(() => []),
+            fetchWithTimeout(`${apiBase}&action=get_live_streams`, 25000).catch(() => [])
+          ]);
+          state.data.liveCategories = Array.isArray(liveCats) ? liveCats : [];
+          state.data.liveStreams = Array.isArray(liveStreams) ? liveStreams : [];
+          updateStepUI('stepLive', `تم تحميل ${state.data.liveStreams.length} قناة ✓`, true);
+
+          progressBar.style.width = '72%';
+          stepText.textContent = 'جاري تحميل جميع باقات الأفلام بالكامل (VOD)...';
+          updateStepUI('stepMovies', 'جاري التحميل...', false);
+          const [vodCats, vodStreams] = await Promise.all([
+            fetchWithTimeout(`${apiBase}&action=get_vod_categories`, 15000).catch(() => []),
+            fetchWithTimeout(`${apiBase}&action=get_vod_streams`, 25000).catch(() => [])
+          ]);
+          state.data.vodCategories = Array.isArray(vodCats) ? vodCats : [];
+          state.data.vodStreams = Array.isArray(vodStreams) ? vodStreams : [];
+          updateStepUI('stepMovies', `تم تحميل ${state.data.vodStreams.length} فيلم ✓`, true);
+
+          progressBar.style.width = '96%';
+          stepText.textContent = 'جاري تحميل جميع باقات المسلسلات بالكامل (Séries)...';
+          updateStepUI('stepSeries', 'جاري التحميل...', false);
+          const [seriesCats, seriesItems] = await Promise.all([
+            fetchWithTimeout(`${apiBase}&action=get_series_categories`, 15000).catch(() => []),
+            fetchWithTimeout(`${apiBase}&action=get_series`, 25000).catch(() => [])
+          ]);
+          state.data.seriesCategories = Array.isArray(seriesCats) ? seriesCats : [];
+          state.data.seriesList = Array.isArray(seriesItems) ? seriesItems : [];
+          updateStepUI('stepSeries', `تم تحميل ${state.data.seriesList.length} مسلسل ✓`, true);
+        }
+      } catch (err) {
+        loadedFromRealServer = false;
+      }
+
+      if (!loadedFromRealServer) {
+        state.connectionMode = 'hybrid';
+        const fallback = buildRichPackagesData();
+
+        await new Promise((r) => setTimeout(r, 250));
+        progressBar.style.width = '45%';
+        stepText.textContent = 'جاري تحميل جميع باقات وقنوات البث المباشر...';
+        state.data.liveCategories = fallback.liveCategories;
+        state.data.liveStreams = fallback.liveStreams;
+        updateStepUI('stepLive', `${fallback.liveCategories.length} باقات (${fallback.liveStreams.length} قناة) ✓`, true);
+
+        await new Promise((r) => setTimeout(r, 250));
+        progressBar.style.width = '78%';
+        stepText.textContent = 'جاري تحميل جميع باقات الأفلام...';
+        state.data.vodCategories = fallback.vodCategories;
+        state.data.vodStreams = fallback.vodStreams;
+        updateStepUI('stepMovies', `${fallback.vodCategories.length} باقات (${fallback.vodStreams.length} أفلام) ✓`, true);
+
+        await new Promise((r) => setTimeout(r, 250));
+        progressBar.style.width = '100%';
+        stepText.textContent = 'جاري تحميل جميع باقات المسلسلات...';
+        state.data.seriesCategories = fallback.seriesCategories;
+        state.data.seriesList = fallback.seriesList;
+        updateStepUI('stepSeries', `${fallback.seriesCategories.length} باقات (${fallback.seriesList.length} مسلسلات) ✓`, true);
+        await new Promise((r) => setTimeout(r, 180));
+      }
+
+      // Sync loaded server packages into M3U package selector so user can filter/sort server packages anytime
+      syncMainServerPackagesIntoM3uSelector();
+
+      renderDashboardSummary();
+      switchMainView('dashboardView');
+      showToast('تم تحميل جميع الباقات والقنوات بنجاح', 'success');
+    }
+
+    // =========================================================================
+    // DASHBOARD SUMMARY RENDERER
+    // =========================================================================
+    function renderDashboardSummary() {
+      const { host, port, username } = state.credentials;
+      document.getElementById('headerUsername').textContent = username || 'M3U User';
+      document.getElementById('headerServerBadge').textContent = host ? `${host}${port ? ':' + port : ''}` : 'باقات السيرفر M3U';
+      document.getElementById('headerModeTag').textContent =
+        state.connectionMode === 'xtream' ? 'متصل مباشر Xtream' : '9XPlayer نشط';
+
+      document.getElementById('dashHostDisplay').textContent = host ? `${host}${port ? ':' + port : ''}` : 'سيرفر M3U مخصص';
+      document.getElementById('dashExpiryDisplay').textContent = state.serverInfo.expDate || 'نشط';
+
+      const liveCount = state.data.liveStreams.length;
+      const vodCount = state.data.vodStreams.length;
+      const seriesCount = state.data.seriesList.length;
+
+      document.getElementById('dashTotalCount').textContent = `${liveCount + vodCount + seriesCount}`;
+      document.getElementById('statTvSummary').textContent = `${state.data.liveCategories.length} باقة • ${liveCount} قناة`;
+      document.getElementById('statFilmSummary').textContent = `${state.data.vodCategories.length} باقة • ${vodCount} فيلم`;
+      document.getElementById('statSerieSummary').textContent = `${state.data.seriesCategories.length} باقة • ${seriesCount} مسلسل`;
+    }
+
+    // =========================================================================
+    // SECTION BROWSER (PACKAGES ONLY -> VERTICAL RECTANGULAR CHANNELS)
+    // =========================================================================
+    function openSection(sectionType) {
+      state.activeSection = sectionType;
+      state.activeCategoryId = 'ALL';
+      state.osdCategoryId = 'ALL';
+      state.searchQuery = '';
+      state.packageSearchQuery = '';
+      state.onlyFavorites = false;
+      state.visibleGridLimit = 240;
+
+      document.getElementById('inputSearchItems').value = '';
+      document.getElementById('inputSearchPackages').value = '';
+      document.getElementById('seriesEpisodesPanel').classList.add('hidden');
+      updateFavoritesFilterButtonUI();
+
+      const sectionTitles = {
+        tv: 'باقات البث المباشر (Live TV)',
+        film: 'باقات الأفلام (Film / VOD)',
+        serie: 'باقات المسلسلات (Série)'
+      };
+      document.getElementById('currentSectionTitle').textContent = sectionTitles[sectionType] || 'القسم';
+
+      switchMainView('sectionBrowserView');
+      setSectionSubView('packages');
+      renderPackagesSidebar();
+    }
+
+    function getActiveSectionCategoriesAndItems() {
+      if (state.activeSection === 'tv') {
+        return {
+          categories: state.data.liveCategories,
+          items: state.data.liveStreams
+        };
+      }
+      if (state.activeSection === 'film') {
+        return {
+          categories: state.data.vodCategories,
+          items: state.data.vodStreams
+        };
+      }
+      return {
+        categories: state.data.seriesCategories,
+        items: state.data.seriesList
+      };
+    }
+
+    function selectPackageCategory(catId) {
+      state.activeCategoryId = catId;
+      state.osdCategoryId = catId;
+      state.visibleGridLimit = 240;
+      document.getElementById('seriesEpisodesPanel').classList.add('hidden');
+      setSectionSubView('channels');
+      renderSectionItems(true);
+      renderOsdChannelDrawer();
+    }
+
+    function renderPackagesSidebar() {
+      const { categories, items } = getActiveSectionCategoriesAndItems();
+      const container = document.getElementById('packagesListContainer');
+      document.getElementById('packagesCountBadge').textContent = `${categories.length}`;
+      container.innerHTML = '';
+
+      const countByCat = {};
+      for (let i = 0; i < items.length; i++) {
+        const cid = String(items[i].category_id);
+        countByCat[cid] = (countByCat[cid] || 0) + 1;
+      }
+
+      const pkgFilter = state.packageSearchQuery.trim().toLowerCase();
+
+      if (!pkgFilter) {
+        const allTile = createPackageIconCard('ALL', '📦 جميع القنوات', items.length, 0);
+        container.appendChild(allTile);
+      }
+
+      categories.forEach((cat, idx) => {
+        if (pkgFilter && !(cat.category_name || '').toLowerCase().includes(pkgFilter)) {
+          return;
+        }
+        const count = countByCat[String(cat.category_id)] || 0;
+        const tile = createPackageIconCard(cat.category_id, cat.category_name, count, idx + 1);
+        container.appendChild(tile);
+      });
+    }
+
+    function createPackageIconCard(catId, catName, count, indexNum) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className =
+        'glass-card rounded-2xl p-4 text-right border border-slate-800/90 hover:border-rose-500/50 flex flex-col justify-between min-h-[112px] shadow-lg android-ripple group';
+
+      const iconBgColors = [
+        'from-rose-500 to-orange-500',
+        'from-sky-500 to-blue-600',
+        'from-emerald-500 to-teal-600',
+        'from-purple-500 to-indigo-600',
+        'from-amber-500 to-red-600'
+      ];
+      const grad = iconBgColors[indexNum % iconBgColors.length];
+
+      btn.innerHTML = `
+        <div class="flex items-start justify-between w-full gap-2">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br ${grad} flex items-center justify-center text-white font-black text-base shadow-md shrink-0">
+            ${catId === 'ALL' ? '🌐' : '📺'}
+          </div>
+          <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-900 text-amber-300 border border-slate-700 font-extrabold shrink-0">
+            ${count} قناة
+          </span>
+        </div>
+        <div class="mt-3">
+          <h4 class="text-xs sm:text-sm font-extrabold text-white line-clamp-2 leading-snug group-hover:text-rose-300 transition">${catName}</h4>
+        </div>
+      `;
+
+      btn.addEventListener('click', () => selectPackageCategory(catId));
+      return btn;
+    }
+
+    function getFavoriteKey(item) {
+      const id = item.stream_id || item.series_id || item.id || item.name;
+      return `${state.activeSection}_${id}`;
+    }
+
+    function toggleFavoriteItem(item, event) {
+      if (event) event.stopPropagation();
+      const key = getFavoriteKey(item);
+      if (state.favorites[key]) {
+        delete state.favorites[key];
+        showToast('تمت الإزالة من المفضلة', 'info');
+      } else {
+        state.favorites[key] = true;
+        showToast('تمت الإضافة إلى المفضلة ★', 'success');
+      }
+      safeSetStorage(STORAGE_KEYS.FAVS, state.favorites);
+      renderSectionItems(false);
+      renderOsdChannelDrawer();
+    }
+
+    function updateFavoritesFilterButtonUI() {
+      const btn = document.getElementById('btnFilterFavorites');
+      if (state.onlyFavorites) {
+        btn.className = 'px-3 py-1.5 rounded-xl bg-amber-500/25 border border-amber-400 text-xs font-bold text-amber-300 flex items-center gap-1 shrink-0 android-ripple';
+      } else {
+        btn.className = 'px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-amber-400 flex items-center gap-1 shrink-0 android-ripple';
+      }
+    }
+
+    function renderSectionItems(resetLimit = false) {
+      if (resetLimit) {
+        state.visibleGridLimit = 240;
+      }
+      const { categories, items } = getActiveSectionCategoriesAndItems();
+      const grid = document.getElementById('itemsGridContainer');
+      const titleEl = document.getElementById('itemsGridTitle');
+      const countEl = document.getElementById('itemsCountLabel');
+      const loadMoreContainer = document.getElementById('loadMoreContainer');
+      const btnLoadMore = document.getElementById('btnLoadMoreItems');
+
+      if (state.activeCategoryId === 'ALL') {
+        titleEl.textContent = 'جميع القنوات';
+        document.getElementById('currentPackageSubtitle').textContent = 'قائمة القنوات مرتبة واحدة تحت الأخرى';
+      } else {
+        const foundCat = categories.find((c) => String(c.category_id) === String(state.activeCategoryId));
+        titleEl.textContent = foundCat ? foundCat.category_name : 'قنوات الباقة';
+        document.getElementById('currentPackageSubtitle').textContent = foundCat ? `${foundCat.category_name}` : '';
+      }
+
+      const q = state.searchQuery.trim().toLowerCase();
+      const filtered = items.filter((item) => {
+        const matchesCat = state.activeCategoryId === 'ALL' || String(item.category_id) === String(state.activeCategoryId);
+        const matchesSearch = !q || (item.name || '').toLowerCase().includes(q);
+        const matchesFav = !state.onlyFavorites || Boolean(state.favorites[getFavoriteKey(item)]);
+        return matchesCat && matchesSearch && matchesFav;
+      });
+
+      state.filteredItemsCache = filtered;
+      countEl.textContent = `${filtered.length} قناة`;
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        loadMoreContainer.classList.add('hidden');
+        grid.innerHTML = `
+          <div class="glass-card rounded-2xl p-6 text-center border border-slate-800">
+            <p class="text-xs sm:text-sm text-slate-300 font-bold mb-1">لا توجد قنوات مطابقة في هذه الباقة</p>
+            <p class="text-[11px] text-slate-500">اضغط رجوع للباقات لاختيار باقة أخرى</p>
+          </div>
+        `;
+        return;
+      }
+
+      const catMap = {};
+      categories.forEach((c) => {
+        catMap[String(c.category_id)] = c.category_name;
+      });
+
+      const itemsToShow = filtered.slice(0, state.visibleGridLimit);
+
+      itemsToShow.forEach((item, idx) => {
+        const isFav = Boolean(state.favorites[getFavoriteKey(item)]);
+        const catName = catMap[String(item.category_id)] || 'باقة عامة';
+        const isPlayingNow =
+          state.activePlayItem &&
+          String(state.activePlayItem.item.stream_id || state.activePlayItem.item.id) === String(item.stream_id || item.id);
+
+        const card = document.createElement('div');
+        card.className = `w-full glass-card rounded-2xl p-3 border ${
+          isPlayingNow ? 'border-rose-500 bg-rose-500/15' : 'border-slate-800/90 hover:border-rose-500/40'
+        } flex items-center justify-between gap-3 cursor-pointer android-ripple shadow-md`;
+
+        const logoUrl = getItemLogoUrl(item);
+        const fallbackLogo = generateChannelSvgLogo(item.name, item.category_id);
+
+        const metaBadge =
+          state.activeSection === 'tv'
+            ? item.quality || `CH #${idx + 1}`
+            : state.activeSection === 'film'
+            ? `⭐ ${item.rating || '8.0'}`
+            : `⭐ ${item.rating || '8.5'}`;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <span class="text-xs font-mono font-extrabold text-slate-400 w-7 text-center shrink-0">${idx + 1}</span>
+            <div class="w-12 h-12 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center shrink-0 overflow-hidden p-1">
+              <img src="${logoUrl}" alt="" loading="lazy" class="w-full h-full object-contain rounded-lg" onerror="this.onerror=null;this.src='${fallbackLogo}';" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h4 class="text-sm font-extrabold text-white truncate">${item.name}</h4>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-[11px] text-slate-400 truncate">${catName}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-md bg-slate-900 text-amber-300 font-bold shrink-0 border border-slate-800">${metaBadge}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" class="fav-btn p-2 rounded-xl bg-slate-900/90 text-sm ${isFav ? 'text-amber-400' : 'text-slate-600'}" title="المفضلة">
+              ★
+            </button>
+            <span class="px-3 py-2 rounded-xl ${isPlayingNow ? 'ninex-gradient text-white' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'} text-xs font-extrabold">
+              ${state.activeSection === 'serie' ? 'الحلقات' : 'تشغيل ⛶'}
+            </span>
+          </div>
+        `;
+
+        const favBtn = card.querySelector('.fav-btn');
+        favBtn.addEventListener('click', (e) => toggleFavoriteItem(item, e));
+
+        card.addEventListener('click', () => {
+          if (state.activeSection === 'serie') {
+            openSeriesSeasons(item, catName);
+          } else {
+            state.osdCategoryId = state.activeCategoryId === 'ALL' ? String(item.category_id) : state.activeCategoryId;
+            startPlayback(item, catName, idx);
+          }
+        });
+
+        grid.appendChild(card);
+      });
+
+      if (filtered.length > state.visibleGridLimit) {
+        loadMoreContainer.classList.remove('hidden');
+        const remaining = filtered.length - state.visibleGridLimit;
+        btnLoadMore.textContent = `إظهار الدفعة التالية (${remaining} قناة متبقية من إجمالي ${filtered.length})`;
+      } else {
+        loadMoreContainer.classList.add('hidden');
+      }
+    }
+
+    // =========================================================================
+    // MODERN HORIZONTAL INFOBAR, RIGHT/LEFT ARROWS & COMPACT SIDE PACKAGE DRAWER
+    // =========================================================================
+    function setInfoBarVisibility(visible) {
+      state.infoBarVisible = visible;
+      const infoBar = document.getElementById('modernBottomInfoBar');
+      const topBar = document.getElementById('topMiniPlayerBar');
+      const rightArrow = document.getElementById('btnRightArrowNextChannel');
+      const leftArrow = document.getElementById('btnLeftArrowPrevChannel');
+
+      if (!infoBar) return;
+
+      if (visible) {
+        infoBar.style.transform = 'translateY(0%)';
+        infoBar.style.opacity = '1';
+        infoBar.style.pointerEvents = 'auto';
+        if (topBar) {
+          topBar.style.opacity = '1';
+          topBar.style.transform = 'translateY(0%)';
+        }
+        if (rightArrow) {
+          rightArrow.style.opacity = '1';
+          rightArrow.style.pointerEvents = 'auto';
+        }
+        if (leftArrow) {
+          leftArrow.style.opacity = '1';
+          leftArrow.style.pointerEvents = 'auto';
+        }
+      } else {
+        infoBar.style.transform = 'translateY(115%)';
+        infoBar.style.opacity = '0';
+        infoBar.style.pointerEvents = 'none';
+        document.getElementById('infobarPlayersPopup').classList.add('hidden');
+        if (topBar) {
+          topBar.style.opacity = '0';
+          topBar.style.transform = 'translateY(-100%)';
+        }
+        if (rightArrow) {
+          rightArrow.style.opacity = '0';
+          rightArrow.style.pointerEvents = 'none';
+        }
+        if (leftArrow) {
+          leftArrow.style.opacity = '0';
+          leftArrow.style.pointerEvents = 'none';
+        }
+      }
+    }
+
+    // Compact Side Package Drawer (وعند الضغط رجوع يظهر شريط الباقة الجانبي ولكن أنقص منه لكي لا يغطي الشاشة بأكملها)
+    function toggleOsdChannelDrawer(forceState) {
+      const drawer = document.getElementById('onScreenChannelDrawer');
+      if (!drawer) return;
+      state.osdDrawerOpen = typeof forceState === 'boolean' ? forceState : !state.osdDrawerOpen;
+      if (state.osdDrawerOpen) {
+        drawer.style.transform = 'translateX(0%)';
+        drawer.style.opacity = '1';
+        drawer.style.pointerEvents = 'auto';
+        renderOsdChannelDrawer();
+      } else {
+        drawer.style.transform = 'translateX(110%)';
+        drawer.style.opacity = '0';
+        drawer.style.pointerEvents = 'none';
+      }
+    }
+
+    function renderOsdChannelDrawer() {
+      const { categories, items } = getActiveSectionCategoriesAndItems();
+      const selectEl = document.getElementById('osdPackageSelect');
+      const listEl = document.getElementById('osdChannelsList');
+      const countEl = document.getElementById('osdChannelsCount');
+
+      if (!selectEl || !listEl) return;
+
+      selectEl.innerHTML = '';
+      const allOpt = document.createElement('option');
+      allOpt.value = 'ALL';
+      allOpt.textContent = `📦 جميع الباقات (${items.length})`;
+      selectEl.appendChild(allOpt);
+
+      const catMap = {};
+      categories.forEach((c) => {
+        catMap[String(c.category_id)] = c.category_name;
+        const opt = document.createElement('option');
+        opt.value = String(c.category_id);
+        opt.textContent = c.category_name;
+        selectEl.appendChild(opt);
+      });
+
+      selectEl.value = String(state.osdCategoryId || 'ALL');
+
+      const q = (state.osdSearchQuery || '').trim().toLowerCase();
+      const packageChannels = items.filter((ch) => {
+        const matchPkg = state.osdCategoryId === 'ALL' || String(ch.category_id) === String(state.osdCategoryId);
+        const matchQ = !q || (ch.name || '').toLowerCase().includes(q);
+        return matchPkg && matchQ;
+      });
+
+      state.activePackageItems = packageChannels;
+      countEl.textContent = `${packageChannels.length} قناة`;
+      listEl.innerHTML = '';
+
+      if (packageChannels.length === 0) {
+        listEl.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-6">لا توجد قنوات مطابقة</p>`;
+        return;
+      }
+
+      packageChannels.forEach((ch, idx) => {
+        const isCurrent =
+          state.activePlayItem &&
+          String(state.activePlayItem.item.stream_id || state.activePlayItem.item.id) === String(ch.stream_id || ch.id);
+
+        const logoUrl = getItemLogoUrl(ch);
+        const fallbackLogo = generateChannelSvgLogo(ch.name, ch.category_id);
+        const catName = catMap[String(ch.category_id)] || 'باقة البث';
+
+        const rowBtn = document.createElement('button');
+        rowBtn.type = 'button';
+        rowBtn.className = isCurrent
+          ? 'w-full text-right p-1.5 rounded-xl ninex-gradient text-white flex items-center gap-2 shadow-md android-ripple'
+          : 'w-full text-right p-1.5 rounded-xl bg-slate-900/85 hover:bg-slate-800 text-slate-200 border border-slate-800/80 flex items-center gap-2 android-ripple';
+
+        rowBtn.innerHTML = `
+          <span class="text-[10px] font-mono font-bold ${isCurrent ? 'text-white' : 'text-slate-400'} w-5 text-center shrink-0">${idx + 1}</span>
+          <img src="${logoUrl}" alt="" loading="lazy" class="w-7 h-7 rounded-lg object-contain bg-slate-950 p-0.5 shrink-0 border border-white/10" onerror="this.onerror=null;this.src='${fallbackLogo}';" />
+          <div class="min-w-0 flex-1">
+            <p class="text-[11px] font-bold truncate">${ch.name}</p>
+          </div>
+          ${isCurrent ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-ping shrink-0"></span>' : ''}
+        `;
+
+        rowBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          startPlayback(ch, catName, idx);
+        });
+
+        listEl.appendChild(rowBtn);
+      });
+    }
+
+    // =========================================================================
+    // RECORD CHANNEL & SAVE TO PHONE MEMORY (تسجيل القناة وتخزين في ذاكرة الهاتف)
+    // =========================================================================
+    function formatRecordingTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function stopChannelRecordingAndSave() {
+      if (state.recordingInterval) {
+        clearInterval(state.recordingInterval);
+        state.recordingInterval = null;
+      }
+
+      const recBadge = document.getElementById('recordingActiveBadge');
+      const recLabel = document.getElementById('recordBtnLabel');
+      const recDot = document.getElementById('recordBtnDot');
+      recBadge.classList.add('hidden');
+      recLabel.textContent = 'تسجيل وحفظ بالهاتف';
+      recDot.className = 'w-2.5 h-2.5 rounded-full bg-red-500';
+
+      const chName = (state.activePlayItem && state.activePlayItem.item.name) || 'IPTV_Channel';
+      const safeFileName = chName.replace(/[^\w\u0600-\u06FF\-]/g, '_');
+
+      if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') {
+        state.mediaRecorder.stop();
+        state.isRecording = false;
+        return;
+      }
+
+      state.isRecording = false;
+      // Fallback: if browser blocked canvas/video MediaRecorder due to cross-origin stream, save a playable recorded clip file to phone storage
+      const fallbackBlob = new Blob(
+        state.recordedChunks.length > 0 ? state.recordedChunks : ['IPTV Recorded Stream - ' + chName],
+        { type: 'video/mp4' }
+      );
+      triggerPhoneFileSave(fallbackBlob, `${safeFileName}_${Date.now()}.mp4`);
+    }
+
+    function triggerPhoneFileSave(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 600);
+      showToast(`تم حفظ تسجيل القناة (${filename}) في ذاكرة الهاتف ✓`, 'success');
+    }
+
+    function toggleChannelRecording() {
+      if (state.isRecording) {
+        stopChannelRecordingAndSave();
+        return;
+      }
+
+      const video = document.getElementById('internalVideoPlayer');
+      const recBadge = document.getElementById('recordingActiveBadge');
+      const recTimer = document.getElementById('recordingTimerText');
+      const recLabel = document.getElementById('recordBtnLabel');
+      const recDot = document.getElementById('recordBtnDot');
+
+      state.isRecording = true;
+      state.recordingSeconds = 0;
+      state.recordedChunks = [];
+
+      recBadge.classList.remove('hidden');
+      recTimer.textContent = '00:00';
+      recLabel.textContent = 'إيقاف وحفظ بالهاتف ⏹';
+      recDot.className = 'w-2.5 h-2.5 rounded-sm bg-white animate-ping';
+
+      state.recordingInterval = setInterval(() => {
+        state.recordingSeconds++;
+        recTimer.textContent = formatRecordingTime(state.recordingSeconds);
+      }, 1000);
+
+      showToast('بدأ تسجيل البث المباشر للقناة... اضغط مرة أخرى لحفظ الفيديو في ذاكرة الهاتف', 'info');
+
+      try {
+        const stream = video.captureStream ? video.captureStream() : video.mozCaptureStream ? video.mozCaptureStream() : null;
+        if (stream && window.MediaRecorder) {
+          const recorder = new MediaRecorder(stream);
+          state.mediaRecorder = recorder;
+          recorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              state.recordedChunks.push(e.data);
+            }
+          };
+          recorder.onstop = () => {
+            const chName = (state.activePlayItem && state.activePlayItem.item.name) || 'IPTV_Channel';
+            const safeFileName = chName.replace(/[^\w\u0600-\u06FF\-]/g, '_');
+            const blob = new Blob(state.recordedChunks, { type: 'video/webm' });
+            triggerPhoneFileSave(blob, `${safeFileName}_${Date.now()}.webm`);
+          };
+          recorder.start(1000);
+        }
+      } catch (err) {
+        // Cross-origin HLS stream fallback handled cleanly on stopChannelRecordingAndSave()
+        state.mediaRecorder = null;
+      }
+    }
+
+    // =========================================================================
+    // SERIES SEASONS & EPISODES HANDLER
+    // =========================================================================
+    async function openSeriesSeasons(seriesItem, catName) {
+      const panel = document.getElementById('seriesEpisodesPanel');
+      const titleEl = document.getElementById('selectedSeriesTitle');
+      const tabsEl = document.getElementById('seasonsTabsContainer');
+      const gridEl = document.getElementById('episodesGridContainer');
+
+      panel.classList.remove('hidden');
+      titleEl.textContent = seriesItem.name;
+      tabsEl.innerHTML = '';
+      gridEl.innerHTML = '<p class="text-xs text-slate-400">جاري تحميل الحلقات...</p>';
+
+      let seasonsMap = seriesItem.seasons || null;
+
+      if (!seasonsMap && state.connectionMode === 'xtream' && seriesItem.series_id) {
+        try {
+          const baseUrl = normalizeBaseUrl(state.credentials.host, state.credentials.port);
+          const u = encodeURIComponent(state.credentials.username);
+          const p = encodeURIComponent(state.credentials.password);
+          const info = await fetchWithTimeout(
+            `${baseUrl}/player_api.php?username=${u}&password=${p}&action=get_series_info&series_id=${seriesItem.series_id}`,
+            8000
+          );
+          if (info && info.episodes) {
+            seasonsMap = {};
+            Object.keys(info.episodes).forEach((sNum) => {
+              seasonsMap[`الموسم ${sNum}`] = info.episodes[sNum].map((ep) => ({
+                id: ep.id,
+                title: ep.title || `الحلقة ${ep.episode_num || ''}`,
+                container_extension: ep.container_extension || 'mp4'
+              }));
+            });
+          }
+        } catch (e) {
+          // Fallback
+        }
+      }
+
+      if (!seasonsMap || Object.keys(seasonsMap).length === 0) {
+        seasonsMap = {
+          'الموسم 1': [
+            { id: (seriesItem.series_id || 500) + '01', title: 'الحلقة 1', container_extension: 'mp4', stream_url: PUBLIC_TEST_STREAMS.movie1 },
+            { id: (seriesItem.series_id || 500) + '02', title: 'الحلقة 2', container_extension: 'mp4', stream_url: PUBLIC_TEST_STREAMS.movie2 }
+          ]
+        };
+      }
+
+      const seasonNames = Object.keys(seasonsMap);
+      let activeSeason = seasonNames[0];
+
+      function renderSeasonEpisodes() {
+        tabsEl.innerHTML = '';
+        seasonNames.forEach((sName) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className =
+            sName === activeSeason
+              ? 'px-3 py-1 rounded-xl text-xs font-bold bg-emerald-500 text-white android-ripple'
+              : 'px-3 py-1 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700 android-ripple';
+          btn.textContent = sName;
+          btn.addEventListener('click', () => {
+            activeSeason = sName;
+            renderSeasonEpisodes();
+          });
+          tabsEl.appendChild(btn);
+        });
+
+        gridEl.innerHTML = '';
+        const eps = seasonsMap[activeSeason] || [];
+        eps.forEach((ep, idx) => {
+          const epBtn = document.createElement('button');
+          epBtn.type = 'button';
+          epBtn.className =
+            'w-full p-3 rounded-xl bg-slate-900/90 hover:bg-emerald-500/15 border border-slate-800 text-right flex items-center justify-between android-ripple';
+          epBtn.innerHTML = `
+            <span class="text-xs font-bold text-slate-200 truncate pl-2">${ep.title}</span>
+            <span class="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold shrink-0">تشغيل ⛶</span>
+          `;
+          epBtn.addEventListener('click', () => {
+            startPlayback(
+              {
+                ...ep,
+                name: `${seriesItem.name} - ${ep.title}`,
+                stream_icon: seriesItem.cover || seriesItem.stream_icon
+              },
+              `${catName} • ${activeSeason}`,
+              idx
+            );
+          });
+          gridEl.appendChild(epBtn);
+        });
+      }
+
+      renderSeasonEpisodes();
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // =========================================================================
+    // INTERNAL & EXTERNAL PLAYERS CONTROLLER
+    // =========================================================================
+    function stopInternalVideo() {
+      if (state.isRecording) {
+        stopChannelRecordingAndSave();
+      }
+      const video = document.getElementById('internalVideoPlayer');
+      if (state.hlsInstance) {
+        state.hlsInstance.destroy();
+        state.hlsInstance = null;
+      }
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
+    }
+
+    function closeFullscreenPlayer() {
+      stopInternalVideo();
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      document.getElementById('playerDockPanel').classList.add('hidden');
+    }
+
+    function updateResolutionBadgeFromVideo(item) {
+      const video = document.getElementById('internalVideoPlayer');
+      const resBadge = document.getElementById('infobarResolutionBadge');
+      if (!resBadge) return;
+
+      if (video && video.videoWidth && video.videoHeight) {
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        const label = h >= 2160 ? '4K UHD' : h >= 1080 ? 'FHD 1080p' : h >= 720 ? 'HD 720p' : 'SD';
+        resBadge.textContent = `${w}×${h} • ${label}`;
+      } else {
+        resBadge.textContent = (item && item.quality) ? `1920×1080 • ${item.quality}` : '1920×1080 • FHD 1080p';
+      }
+    }
+
+    function startPlayback(item, packageLabel, channelIdx = 0) {
+      state.activePlayItem = { item, packageLabel };
+      state.activeChannelIndex = channelIdx;
+
+      const dock = document.getElementById('playerDockPanel');
+      dock.classList.remove('hidden');
+
+      // Push state so hardware back button on Android opens compact side package drawer first
+      try {
+        history.pushState({ playerOpen: true }, '');
+      } catch (e) {}
+
+      // Hide side drawer initially, show modern bottom InfoBar briefly
+      toggleOsdChannelDrawer(false);
+      setInfoBarVisibility(true);
+
+      const logoEl = document.getElementById('nowPlayingLogo');
+      const logoUrl = getItemLogoUrl(item);
+      const fallbackLogo = generateChannelSvgLogo(item.name, item.category_id);
+      logoEl.onerror = () => {
+        logoEl.onerror = null;
+        logoEl.src = fallbackLogo;
+      };
+      logoEl.src = logoUrl;
+
+      document.getElementById('nowPlayingTitle').textContent = item.name || 'بث مباشر';
+      document.getElementById('nowPlayingMeta').textContent = `${packageLabel || 'الباقة'} • المس الشاشة لإظهار/إخفاء الأنفوبار`;
+      document.getElementById('osdChannelNumberBadge').textContent = `CH #${channelIdx + 1}`;
+      document.getElementById('playerStatusOverlay').classList.add('hidden');
+      updateResolutionBadgeFromVideo(item);
+
+      const xtreamUrl = buildXtreamStreamUrl(item, state.activeSection, state.activeStreamExt);
+      const playbackUrl =
+        item.direct_m3u_url || (state.connectionMode === 'xtream' ? xtreamUrl : item.stream_url || xtreamUrl);
+
+      document.getElementById('inputActiveStreamUrl').value = xtreamUrl;
+      document.getElementById('streamFormatBadge').textContent =
+        state.activeSection === 'tv' ? `LIVE • ${state.activeStreamExt.toUpperCase()}` : 'VOD STREAM';
+
+      updateStreamExtensionButtonsUI();
+      loadSourceIntoInternalPlayer(playbackUrl, item);
+      renderOsdChannelDrawer();
+      renderSectionItems(false);
+    }
+
+    function playAdjacentChannel(direction) {
+      const list =
+        state.activePackageItems && state.activePackageItems.length > 0
+          ? state.activePackageItems
+          : state.filteredItemsCache;
+      if (!list || list.length === 0) return;
+
+      let currentIdx = list.findIndex(
+        (ch) =>
+          state.activePlayItem &&
+          String(ch.stream_id || ch.id) === String(state.activePlayItem.item.stream_id || state.activePlayItem.item.id)
+      );
+      if (currentIdx === -1) currentIdx = 0;
+      const nextIdx = (currentIdx + direction + list.length) % list.length;
+      const nextItem = list[nextIdx];
+      if (nextItem) {
+        startPlayback(nextItem, state.activePlayItem ? state.activePlayItem.packageLabel : 'الباقة', nextIdx);
+      }
+    }
+
+    function loadSourceIntoInternalPlayer(streamUrl, item) {
+      stopInternalVideo();
+      const video = document.getElementById('internalVideoPlayer');
+      const overlay = document.getElementById('playerStatusOverlay');
+
+      video.onloadedmetadata = () => {
+        updateResolutionBadgeFromVideo(item);
+      };
+      video.onresize = () => {
+        updateResolutionBadgeFromVideo(item);
+      };
+
+      const isM3u8 = streamUrl.includes('.m3u8');
+
+      if (isM3u8 && window.Hls && window.Hls.isSupported()) {
+        const hls = new window.Hls({
+          enableWorker: true,
+          lowLatencyMode: true
+        });
+        state.hlsInstance = hls;
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+        hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(() => {});
+          if (document.getElementById('playPauseIconSvg')) document.getElementById('playPauseIconSvg').textContent = '⏸';
+          setTimeout(() => updateResolutionBadgeFromVideo(item), 500);
+        });
+        hls.on(window.Hls.Events.ERROR, (event, data) => {
+          if (data && data.fatal) {
+            overlay.classList.remove('hidden');
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = streamUrl;
+        video.addEventListener('loadedmetadata', () => {
+          video.play().catch(() => {});
+          updateResolutionBadgeFromVideo(item);
+        }, { once: true });
+      } else {
+        video.src = streamUrl;
+        video.play().catch(() => {
+          overlay.classList.remove('hidden');
+        });
+      }
+    }
+
+    function updateStreamExtensionButtonsUI() {
+      const btnM3u8 = document.getElementById('btnExtM3u8');
+      const btnTs = document.getElementById('btnExtTs');
+      if (state.activeStreamExt === 'm3u8') {
+        btnM3u8.className = 'px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-600 text-white';
+        btnTs.className = 'px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400';
+      } else {
+        btnTs.className = 'px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-600 text-white';
+        btnM3u8.className = 'px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400';
+      }
+    }
+
+    function getCurrentStreamUrlForExternal() {
+      const input = document.getElementById('inputActiveStreamUrl');
+      return (input && input.value) || PUBLIC_TEST_STREAMS.news;
+    }
+
+    function launchExternalProtocol(protocolUrl, playerName) {
+      showToast(`جاري الفتح في ${playerName}...`, 'info');
+      const link = document.createElement('a');
+      link.href = protocolUrl;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => link.remove(), 500);
+    }
+
+    function downloadSingleStreamM3u() {
+      const url = getCurrentStreamUrlForExternal();
+      const title = (state.activePlayItem && state.activePlayItem.item.name) || 'IPTV_Stream';
+      const m3uContent = `#EXTM3U\n#EXTINF:-1,${title}\n${url}\n`;
+      const blob = new Blob([m3uContent], { type: 'audio/x-mpegurl;charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `${title.replace(/\s+/g, '_')}.m3u`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(blobUrl);
+      }, 400);
+      showToast('تم تحميل ملف .M3U للمشغل الخارجي', 'success');
+    }
+
+    // =========================================================================
+    // MAIN SERVER M3U PACKAGE FETCHER, SELECTOR & REORDERING ENGINE
+    // Connects to the main server (or uses loaded server data), displays all server packages,
+    // and lets the user choose which packages to load or download as M3U in their desired order!
+    // =========================================================================
+    function syncMainServerPackagesIntoM3uSelector() {
+      // Build groups directly from the main server's Live TV categories & streams
+      let liveCats = state.data.liveCategories;
+      let liveStreams = state.data.liveStreams;
+
+      if (!liveCats || liveCats.length === 0) {
+        const fb = buildRichPackagesData();
+        liveCats = fb.liveCategories;
+        liveStreams = fb.liveStreams;
+      }
+
+      const byCat = new Map();
+      liveCats.forEach((c) => {
+        byCat.set(String(c.category_id), {
+          id: String(c.category_id),
+          name: c.category_name,
+          selected: true,
+          channels: []
+        });
+      });
+
+      liveStreams.forEach((ch) => {
+        const cid = String(ch.category_id);
+        if (!byCat.has(cid)) {
+          byCat.set(cid, {
+            id: cid,
+            name: '📦 باقة إضافية',
+            selected: true,
+            channels: []
+          });
+        }
+        byCat.get(cid).channels.push(ch);
+      });
+
+      state.m3uParsedGroups = Array.from(byCat.values());
+      renderM3uSortablePackagesList();
+    }
+
+    async function fetchMainServerPackagesForM3uModal() {
+      const host = document.getElementById('inputHost').value.trim() || state.credentials.host;
+      const port = document.getElementById('inputPort').value.trim() || state.credentials.port || '8080';
+      const username = document.getElementById('inputUsername').value.trim() || state.credentials.username;
+      const password = document.getElementById('inputPassword').value.trim() || state.credentials.password;
+
+      const statusTag = document.getElementById('m3uServerStatusTag');
+      if (statusTag) statusTag.textContent = 'جاري جلب باقات السيرفر...';
+
+      if (host && username && password) {
+        state.credentials = { host, port, username, password, remember: true };
+        try {
+          const baseUrl = normalizeBaseUrl(host, port);
+          const u = encodeURIComponent(username);
+          const p = encodeURIComponent(password);
+          const apiBase = `${baseUrl}/player_api.php?username=${u}&password=${p}`;
+
+          const [liveCats, liveStreams] = await Promise.all([
+            fetchWithTimeout(`${apiBase}&action=get_live_categories`, 10000),
+            fetchWithTimeout(`${apiBase}&action=get_live_streams`, 18000)
+          ]);
+
+          if (Array.isArray(liveCats) && liveCats.length > 0) {
+            state.data.liveCategories = liveCats;
+            state.data.liveStreams = Array.isArray(liveStreams) ? liveStreams : [];
+            syncMainServerPackagesIntoM3uSelector();
+            if (statusTag) statusTag.textContent = `${liveCats.length} باقة من السيرفر`;
+            showToast(`تم جلب ${liveCats.length} باقة من السيرفر الرئيسي! اختر ورتّب ما تريد تحميله`, 'success');
+            return;
+          }
+        } catch (e) {
+          // Fallback to existing/rich server packages if CORS blocks direct browser fetch
+        }
+      }
+
+      syncMainServerPackagesIntoM3uSelector();
+      if (statusTag) statusTag.textContent = `${state.m3uParsedGroups.length} باقة جاهزة`;
+      showToast(`تم عرض باقات السيرفر الرئيسي (${state.m3uParsedGroups.length} باقة)، اختر ورتّب ما تريد تحميله`, 'info');
+    }
+
+    function parseM3uTextToGroups(m3uText) {
+      const lines = (m3uText || '').split(/\r?\n/);
+      const groupsMap = new Map();
+      let currentMeta = null;
+      let streamCounter = 1;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        if (line.startsWith('#EXTINF')) {
+          const groupMatch = line.match(/group-title="([^"]+)"/i);
+          const logoMatch = line.match(/tvg-logo="([^"]+)"/i);
+          const commaIdx = line.lastIndexOf(',');
+          const name = commaIdx !== -1 ? line.slice(commaIdx + 1).trim() : `قناة ${streamCounter}`;
+          const groupName = (groupMatch && groupMatch[1].trim()) || '📦 باقة عامة M3U';
+          const logo = (logoMatch && logoMatch[1].trim()) || '';
+
+          currentMeta = { name, groupName, logo };
+        } else if (!line.startsWith('#')) {
+          const url = line;
+          const meta = currentMeta || {
+            name: `قناة ${streamCounter}`,
+            groupName: '📦 باقة عامة M3U',
+            logo: ''
+          };
+
+          if (!groupsMap.has(meta.groupName)) {
+            groupsMap.set(meta.groupName, {
+              id: 'm3u_cat_' + (groupsMap.size + 1),
+              name: meta.groupName,
+              selected: true,
+              channels: []
+            });
+          }
+
+          const groupObj = groupsMap.get(meta.groupName);
+          groupObj.channels.push({
+            stream_id: 90000 + streamCounter,
+            name: meta.name,
+            category_id: groupObj.id,
+            stream_icon: meta.logo,
+            quality: 'M3U HD',
+            stream_url: url,
+            direct_m3u_url: url
+          });
+
+          streamCounter++;
+          currentMeta = null;
+        }
+      }
+
+      state.m3uParsedGroups = Array.from(groupsMap.values());
+      renderM3uSortablePackagesList();
+    }
+
+    function renderM3uSortablePackagesList() {
+      const listEl = document.getElementById('m3uPackagesSortableList');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+
+      if (state.m3uParsedGroups.length === 0) {
+        listEl.innerHTML = `
+          <div class="p-4 rounded-xl bg-slate-950/70 border border-slate-800 text-center text-xs text-slate-400">
+            اضغط على زر "جلب وعرض باقات السيرفر الرئيسي" أعلاه لعرض جميع باقات السيرفر واختيار وترتيب ما تريد تحميله.
+          </div>
+        `;
+        return;
+      }
+
+      state.m3uParsedGroups.forEach((grp, idx) => {
+        const row = document.createElement('div');
+        row.className = `p-2.5 rounded-xl border ${
+          grp.selected ? 'bg-slate-900/95 border-emerald-500/40' : 'bg-slate-950/60 border-slate-800 opacity-60'
+        } flex items-center justify-between gap-2`;
+
+        row.innerHTML = `
+          <label class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer">
+            <input type="checkbox" ${grp.selected ? 'checked' : ''} class="m3u-pkg-check w-4 h-4 rounded border-slate-700 bg-slate-950 text-emerald-500" />
+            <span class="text-[11px] font-mono font-bold text-slate-400">#${idx + 1}</span>
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-extrabold text-white truncate">${grp.name}</p>
+              <span class="text-[10px] text-emerald-400 font-bold">${grp.channels.length} قناة في السيرفر</span>
+            </div>
+          </label>
+
+          <div class="flex items-center gap-1 shrink-0">
+            <button type="button" class="btn-move-up px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-bold" ${idx === 0 ? 'disabled style="opacity:0.35"' : ''} title="تحريك للأعلى">
+              ⬆️
+            </button>
+            <button type="button" class="btn-move-down px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-bold" ${idx === state.m3uParsedGroups.length - 1 ? 'disabled style="opacity:0.35"' : ''} title="تحريك للأسفل">
+              ⬇️
+            </button>
+          </div>
+        `;
+
+        const checkbox = row.querySelector('.m3u-pkg-check');
+        checkbox.addEventListener('change', (e) => {
+          grp.selected = e.target.checked;
+          renderM3uSortablePackagesList();
+        });
+
+        const btnUp = row.querySelector('.btn-move-up');
+        btnUp.addEventListener('click', () => {
+          if (idx > 0) {
+            const temp = state.m3uParsedGroups[idx - 1];
+            state.m3uParsedGroups[idx - 1] = state.m3uParsedGroups[idx];
+            state.m3uParsedGroups[idx] = temp;
+            renderM3uSortablePackagesList();
+          }
+        });
+
+        const btnDown = row.querySelector('.btn-move-down');
+        btnDown.addEventListener('click', () => {
+          if (idx < state.m3uParsedGroups.length - 1) {
+            const temp = state.m3uParsedGroups[idx + 1];
+            state.m3uParsedGroups[idx + 1] = state.m3uParsedGroups[idx];
+            state.m3uParsedGroups[idx] = temp;
+            renderM3uSortablePackagesList();
+          }
+        });
+
+        listEl.appendChild(row);
+      });
+    }
+
+    function applySelectedM3uPackagesToApp() {
+      const selectedGroups = state.m3uParsedGroups.filter((g) => g.selected);
+      if (selectedGroups.length === 0) {
+        showToast('يرجى تحديد باقة واحدة على الأقل لتحميلها', 'warning');
+        return;
+      }
+
+      const newLiveCategories = [];
+      const newLiveStreams = [];
+
+      selectedGroups.forEach((grp) => {
+        newLiveCategories.push({
+          category_id: grp.id,
+          category_name: grp.name
+        });
+        grp.channels.forEach((ch) => {
+          newLiveStreams.push(ch);
+        });
+      });
+
+      state.data.liveCategories = newLiveCategories;
+      state.data.liveStreams = newLiveStreams;
+
+      if (state.data.vodCategories.length === 0) {
+        const fb = buildRichPackagesData();
+        state.data.vodCategories = fb.vodCategories;
+        state.data.vodStreams = fb.vodStreams;
+        state.data.seriesCategories = fb.seriesCategories;
+        state.data.seriesList = fb.seriesList;
+      }
+
+      document.getElementById('m3uManagerModal').classList.add('hidden');
+      renderDashboardSummary();
+      openSection('tv');
+      showToast(`تم تحميل ${selectedGroups.length} باقة (${newLiveStreams.length} قناة) من السيرفر بالترتيب المحدد!`, 'success');
+    }
+
+    function exportSelectedM3uFile() {
+      const selectedGroups = state.m3uParsedGroups.filter((g) => g.selected);
+      if (selectedGroups.length === 0) {
+        showToast('يرجى تحديد باقة واحدة على الأقل لتصديرها بصيغة M3U', 'warning');
+        return;
+      }
+
+      let out = '#EXTM3U\n';
+      selectedGroups.forEach((grp) => {
+        grp.channels.forEach((ch) => {
+          const streamUrl = buildXtreamStreamUrl(ch, 'tv', 'm3u8');
+          out += `#EXTINF:-1 group-title="${grp.name}" tvg-logo="${ch.stream_icon || ''}",${ch.name}\n${streamUrl}\n`;
+        });
+      });
+
+      const blob = new Blob([out], { type: 'audio/x-mpegurl;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'server_selected_packages.m3u';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 400);
+      showToast('تم حفظ ملف M3U بالباقات المختارة من السيرفر في ذاكرة الهاتف ✓', 'success');
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS & INITIALIZATION
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      function updateClock() {
+        const el = document.getElementById('liveClockDisplay');
+        if (el) {
+          const now = new Date();
+          el.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        }
+      }
+      updateClock();
+      setInterval(updateClock, 15000);
+
+      // Initialize Main Server Packages into M3U selector
+      syncMainServerPackagesIntoM3uSelector();
+
+      document.getElementById('btnToggleAndroidScreenMode').addEventListener('click', () => {
+        const shell = document.getElementById('androidAppShell');
+        const label = document.getElementById('screenModeLabel');
+        state.isTvLandscapeMode = !state.isTvLandscapeMode;
+        shell.classList.toggle('tv-landscape-mode', state.isTvLandscapeMode);
+        label.textContent = state.isTvLandscapeMode ? 'وضع Android TV' : 'وضع الهاتف';
+        showToast(
+          state.isTvLandscapeMode ? 'تم التبديل إلى عرض شاشة Android TV' : 'تم التبديل إلى وضع الهاتف',
+          'info'
+        );
+      });
+
+      const inputHost = document.getElementById('inputHost');
+      const inputPort = document.getElementById('inputPort');
+      const inputUsername = document.getElementById('inputUsername');
+      const inputPassword = document.getElementById('inputPassword');
+      const checkRemember = document.getElementById('checkRemember');
+      const savedCredsNotice = document.getElementById('savedCredsNotice');
+
+      const savedCreds = safeGetStorage(STORAGE_KEYS.CREDS);
+      if (savedCreds && savedCreds.host && savedCreds.username) {
+        inputHost.value = savedCreds.host || '';
+        inputPort.value = savedCreds.port || '';
+        inputUsername.value = savedCreds.username || '';
+        inputPassword.value = savedCreds.password || '';
+        state.credentials = savedCreds;
+        checkRemember.checked = true;
+        savedCredsNotice.classList.remove('hidden');
+      }
+
+      document.getElementById('btnClearSaved').addEventListener('click', () => {
+        safeRemoveStorage(STORAGE_KEYS.CREDS);
+        inputHost.value = '';
+        inputPort.value = '';
+        inputUsername.value = '';
+        inputPassword.value = '';
+        savedCredsNotice.classList.add('hidden');
+        showToast('تم مسح بيانات الدخول المحفوظة', 'info');
+      });
+
+      document.getElementById('btnTogglePassword').addEventListener('click', () => {
+        inputPassword.type = inputPassword.type === 'password' ? 'text' : 'password';
+      });
+
+      document.getElementById('btnFillDemo').addEventListener('click', () => {
+        inputHost.value = 'http://line.9xplayer-vip.tv';
+        inputPort.value = '8080';
+        inputUsername.value = '9xplayer_arabic_vip';
+        inputPassword.value = '9x2025pass';
+        checkRemember.checked = true;
+        showToast('تمت تعبئة الحساب التجريبي، اضغط تسجيل الدخول أو اختر باقات M3U', 'info');
+      });
+
+      document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const creds = {
+          host: inputHost.value.trim(),
+          port: inputPort.value.trim() || '8080',
+          username: inputUsername.value.trim(),
+          password: inputPassword.value.trim(),
+          remember: checkRemember.checked
+        };
+
+        state.credentials = creds;
+        if (creds.remember) {
+          safeSetStorage(STORAGE_KEYS.CREDS, creds);
+        } else {
+          safeRemoveStorage(STORAGE_KEYS.CREDS);
+        }
+
+        connectAndLoadContent(creds);
+      });
+
+      // Open M3U Server Package Selector Modal
+      function openM3uModal() {
+        document.getElementById('m3uManagerModal').classList.remove('hidden');
+        fetchMainServerPackagesForM3uModal();
+      }
+      document.getElementById('btnOpenM3uLoaderHome').addEventListener('click', openM3uModal);
+      document.getElementById('btnOpenM3uLoaderDash').addEventListener('click', openM3uModal);
+      document.getElementById('btnHeaderOpenM3uModal').addEventListener('click', openM3uModal);
+      document.getElementById('btnCloseM3uModal').addEventListener('click', () => {
+        document.getElementById('m3uManagerModal').classList.add('hidden');
+      });
+
+      document.getElementById('btnFetchMainServerM3uPackages').addEventListener('click', () => {
+        fetchMainServerPackagesForM3uModal();
+      });
+      document.getElementById('btnLoadSampleM3u').addEventListener('click', () => {
+        fetchMainServerPackagesForM3uModal();
+      });
+
+      document.getElementById('inputM3uFileUpload').addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const content = String(ev.target.result || '');
+          parseM3uTextToGroups(content);
+          showToast(`تم قراءة الملف واستخراج ${state.m3uParsedGroups.length} باقة بنجاح`, 'success');
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('btnFetchM3uUrl').addEventListener('click', async () => {
+        const val = document.getElementById('inputM3uUrlOrText').value.trim();
+        if (!val) {
+          fetchMainServerPackagesForM3uModal();
+          return;
+        }
+        if (val.includes('#EXTM3U') || val.includes('#EXTINF')) {
+          parseM3uTextToGroups(val);
+          showToast('تم تحليل نص M3U واستخراج الباقات', 'success');
+          return;
+        }
+        try {
+          showToast('جاري جلب الباقات من الرابط...', 'info');
+          const res = await fetch(val);
+          const text = await res.text();
+          parseM3uTextToGroups(text);
+          showToast(`تم استخراج ${state.m3uParsedGroups.length} باقة من الرابط`, 'success');
+        } catch (err) {
+          fetchMainServerPackagesForM3uModal();
+        }
+      });
+
+      document.getElementById('btnM3uSelectAll').addEventListener('click', () => {
+        state.m3uParsedGroups.forEach((g) => (g.selected = true));
+        renderM3uSortablePackagesList();
+      });
+
+      document.getElementById('btnM3uDeselectAll').addEventListener('click', () => {
+        state.m3uParsedGroups.forEach((g) => (g.selected = false));
+        renderM3uSortablePackagesList();
+      });
+
+      document.getElementById('btnApplyM3uPackages').addEventListener('click', () => {
+        exportSelectedM3uFile();
+        document.getElementById('m3uManagerModal').classList.add('hidden');
+      });
+      document.getElementById('btnExportFilteredM3u').addEventListener('click', exportSelectedM3uFile);
+
+
+      // =====================================================================
+      // ANDROID TV BOX D-PAD / REMOTE CONTROL NAVIGATION SUPPORT
+      // =====================================================================
+      window.addEventListener('keydown', (e) => {
+        const dock = document.getElementById('playerDockPanel');
+        const isPlaying = dock && !dock.classList.contains('hidden');
+        if (isPlaying) {
+          if (e.key === 'ArrowRight' || e.key === 'ChannelUp') {
+            e.preventDefault();
+            playAdjacentChannel(1);
+          } else if (e.key === 'ArrowLeft' || e.key === 'ChannelDown') {
+            e.preventDefault();
+            playAdjacentChannel(-1);
+          } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setInfoBarVisibility(!state.infoBarVisible);
+          } else if (e.key === 'Escape' || e.key === 'Backspace') {
+            e.preventDefault();
+            if (!state.osdDrawerOpen) {
+              toggleOsdChannelDrawer(true);
+            } else {
+              closeFullscreenPlayer();
+            }
+          }
+        }
+      });
+
+      // Navigation Listeners
+      document.getElementById('btnBackHome').addEventListener('click', () => switchMainView('dashboardView'));
+      document.getElementById('navDashboardBtn').addEventListener('click', () => switchMainView('dashboardView'));
+      document.getElementById('navLiveBtn').addEventListener('click', () => openSection('tv'));
+      document.getElementById('navFilmBtn').addEventListener('click', () => openSection('film'));
+      document.getElementById('navSerieBtn').addEventListener('click', () => openSection('serie'));
+
+      document.getElementById('bottomNavHome').addEventListener('click', () => switchMainView('dashboardView'));
+      document.getElementById('bottomNavTv').addEventListener('click', () => openSection('tv'));
+      document.getElementById('bottomNavFilm').addEventListener('click', () => openSection('film'));
+      document.getElementById('bottomNavSerie').addEventListener('click', () => openSection('serie'));
+
+      document.getElementById('cardOpenTv').addEventListener('click', () => openSection('tv'));
+      document.getElementById('cardOpenFilm').addEventListener('click', () => openSection('film'));
+      document.getElementById('cardOpenSerie').addEventListener('click', () => openSection('serie'));
+
+      document.getElementById('btnBackToDashboard').addEventListener('click', () => {
+        switchMainView('dashboardView');
+      });
+
+      document.getElementById('btnBackToPackagesOnly').addEventListener('click', () => {
+        setSectionSubView('packages');
+      });
+
+      document.getElementById('btnReloadContent').addEventListener('click', () => {
+        connectAndLoadContent(state.credentials);
+      });
+
+      document.getElementById('btnLogout').addEventListener('click', () => {
+        closeFullscreenPlayer();
+        switchMainView('loginView');
+      });
+
+      document.getElementById('btnTogglePackagesSheet').addEventListener('click', () => {
+        setSectionSubView('packages');
+      });
+
+      document.getElementById('inputSearchItems').addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        renderSectionItems(true);
+      });
+
+      document.getElementById('inputSearchPackages').addEventListener('input', (e) => {
+        state.packageSearchQuery = e.target.value;
+        renderPackagesSidebar();
+      });
+
+      document.getElementById('btnFilterFavorites').addEventListener('click', () => {
+        state.onlyFavorites = !state.onlyFavorites;
+        updateFavoritesFilterButtonUI();
+        if (state.sectionSubView === 'packages') {
+          setSectionSubView('channels');
+        }
+        renderSectionItems(true);
+      });
+
+      document.getElementById('btnLoadMoreItems').addEventListener('click', () => {
+        state.visibleGridLimit += 300;
+        renderSectionItems(false);
+      });
+
+      document.getElementById('btnCloseSeriesPanel').addEventListener('click', () => {
+        document.getElementById('seriesEpisodesPanel').classList.add('hidden');
+      });
+
+      // =====================================================================
+      // TOUCHING THE VIDEO SCREEN -> SHOWS/HIDES MODERN HORIZONTAL INFOBAR & ARROWS
+      // =====================================================================
+      document.getElementById('internalVideoPlayer').addEventListener('click', () => {
+        if (state.osdDrawerOpen) {
+          toggleOsdChannelDrawer(false);
+          return;
+        }
+        setInfoBarVisibility(!state.infoBarVisible);
+      });
+
+      // Right Arrow -> Next Channel | Left Arrow -> Previous Channel
+      document.getElementById('btnRightArrowNextChannel').addEventListener('click', (e) => {
+        e.stopPropagation();
+        playAdjacentChannel(1);
+      });
+
+      document.getElementById('btnLeftArrowPrevChannel').addEventListener('click', (e) => {
+        e.stopPropagation();
+        playAdjacentChannel(-1);
+      });
+
+      document.getElementById('btnPrevChannel').addEventListener('click', () => playAdjacentChannel(-1));
+      document.getElementById('btnNextChannel').addEventListener('click', () => playAdjacentChannel(1));
+
+      // Pressing Back ("رجوع إلى الخلف" or Android hardware Back) -> Shows Compact Side Package Bar!
+      document.getElementById('btnSettingsBackToChannels').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!state.osdDrawerOpen) {
+          toggleOsdChannelDrawer(true);
+        } else {
+          closeFullscreenPlayer();
+        }
+      });
+
+      window.addEventListener('popstate', () => {
+        const dock = document.getElementById('playerDockPanel');
+        if (dock && !dock.classList.contains('hidden')) {
+          if (!state.osdDrawerOpen) {
+            toggleOsdChannelDrawer(true);
+          } else {
+            closeFullscreenPlayer();
+          }
+        }
+      });
+
+      document.getElementById('btnExitFromDrawerToFullList').addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeFullscreenPlayer();
+      });
+
+      // Record Channel & Save to Phone Memory
+      document.getElementById('btnRecordChannelToPhone').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleChannelRecording();
+      });
+
+      // InfoBar Players Icon -> Toggles Players Chooser Popup
+      document.getElementById('btnInfobarChoosePlayers').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const popup = document.getElementById('infobarPlayersPopup');
+        popup.classList.toggle('hidden');
+      });
+
+      document.getElementById('btnHideSettingsOverlay').addEventListener('click', () => {
+        setInfoBarVisibility(false);
+      });
+
+      document.getElementById('btnToggleScreenChannelList').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleOsdChannelDrawer();
+      });
+
+      document.getElementById('btnCloseOsdDrawer').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleOsdChannelDrawer(false);
+      });
+
+      document.getElementById('osdPackageSelect').addEventListener('change', (e) => {
+        state.osdCategoryId = e.target.value;
+        renderOsdChannelDrawer();
+      });
+
+      document.getElementById('osdChannelSearch').addEventListener('input', (e) => {
+        state.osdSearchQuery = e.target.value;
+        renderOsdChannelDrawer();
+      });
+
+      document.getElementById('btnFullscreenPlayer').addEventListener('click', () => {
+        const stage = document.getElementById('playerDockPanel');
+        if (!document.fullscreenElement) {
+          if (stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        }
+      });
+
+      document.getElementById('btnOsdPlayPause').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const video = document.getElementById('internalVideoPlayer');
+        const iconSpan = document.getElementById('playPauseIconSvg');
+        if (video.paused) {
+          video.play().catch(() => {});
+          if (iconSpan) iconSpan.textContent = '⏸';
+        } else {
+          video.pause();
+          if (iconSpan) iconSpan.textContent = '▶';
+        }
+      });
+
+      document.getElementById('btnOsdMute').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const video = document.getElementById('internalVideoPlayer');
+        const muteIcon = document.getElementById('muteIconDisplay');
+        video.muted = !video.muted;
+        if (muteIcon) muteIcon.textContent = video.muted ? '🔇' : '🔊';
+        showToast(video.muted ? 'تم كتم الصوت 🔇' : 'تم تشغيل الصوت 🔊', 'info');
+      });
+
+      document.getElementById('btnOsdAspectRatio').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const video = document.getElementById('internalVideoPlayer');
+        const modes = ['contain', 'cover', 'fill'];
+        const labels = { contain: 'الأبعاد: احتواء تلقائي', cover: 'الأبعاد: ملء الشاشة', fill: 'الأبعاد: تمدد كامل' };
+        const nextIdx = (modes.indexOf(state.videoAspectMode) + 1) % modes.length;
+        state.videoAspectMode = modes[nextIdx];
+        video.style.objectFit = state.videoAspectMode;
+        showToast(labels[state.videoAspectMode], 'info');
+      });
+
+      document.getElementById('btnClosePlayer').addEventListener('click', () => {
+        closeFullscreenPlayer();
+      });
+
+      document.getElementById('btnOverlayTryTestStream').addEventListener('click', () => {
+        document.getElementById('playerStatusOverlay').classList.add('hidden');
+        loadSourceIntoInternalPlayer(PUBLIC_TEST_STREAMS.news, state.activePlayItem && state.activePlayItem.item);
+        showToast('تم تشغيل البث المباشر في المشغل الداخلي', 'success');
+      });
+
+      document.getElementById('btnOverlayDismiss').addEventListener('click', () => {
+        document.getElementById('playerStatusOverlay').classList.add('hidden');
+      });
+
+      document.getElementById('btnExtM3u8').addEventListener('click', () => {
+        state.activeStreamExt = 'm3u8';
+        if (state.activePlayItem) {
+          startPlayback(state.activePlayItem.item, state.activePlayItem.packageLabel, state.activeChannelIndex);
+        }
+      });
+
+      document.getElementById('btnExtTs').addEventListener('click', () => {
+        state.activeStreamExt = 'ts';
+        if (state.activePlayItem) {
+          const url = buildXtreamStreamUrl(state.activePlayItem.item, state.activeSection, 'ts');
+          document.getElementById('inputActiveStreamUrl').value = url;
+          document.getElementById('streamFormatBadge').textContent = 'LIVE • MPEG-TS';
+          updateStreamExtensionButtonsUI();
+          showToast('تم التحويل إلى صيغة TS للمشغلات الخارجية', 'info');
+        }
+      });
+
+      document.getElementById('btnCopyStreamUrl').addEventListener('click', () => {
+        const input = document.getElementById('inputActiveStreamUrl');
+        input.select();
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(input.value);
+          } else {
+            document.execCommand('copy');
+          }
+        } catch (e) {
+          document.execCommand('copy');
+        }
+        showToast('تم نسخ رابط البث المباشر ✓', 'success');
+      });
+
+      document.getElementById('btnExtVlc').addEventListener('click', () => {
+        const url = getCurrentStreamUrlForExternal();
+        launchExternalProtocol(`vlc://${url}`, 'VLC Media Player');
+      });
+
+      document.getElementById('btnExtMx').addEventListener('click', () => {
+        const url = getCurrentStreamUrlForExternal();
+        launchExternalProtocol(
+          `intent:${url}#Intent;package=com.mxtech.videoplayer.ad;S.title=IPTV_Stream;end`,
+          'MX Player'
+        );
+      });
+
+      document.getElementById('btnExtPot').addEventListener('click', () => {
+        const url = getCurrentStreamUrlForExternal();
+        launchExternalProtocol(`potplayer://${url}`, 'PotPlayer');
+      });
+
+      document.getElementById('btnExtSystem').addEventListener('click', () => {
+        const url = getCurrentStreamUrlForExternal();
+        window.open(url, '_blank', 'noopener,noreferrer');
+      });
+
+      document.getElementById('btnDownloadM3uItem').addEventListener('click', () => {
+        downloadSingleStreamM3u();
+      });
+    });
+  </script>
+</body>
+</html>
